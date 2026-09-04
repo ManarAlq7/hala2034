@@ -1,5 +1,4 @@
 import type { Cluster, Report } from "./types";
-import { zoneById } from "./taxonomy";
 
 /* -------------------------------------------------------------------------- */
 /*  تحليلات تشغيلية: الاتجاه الزمني، مؤشرات الاستجابة، وكشف التصاعد            */
@@ -92,9 +91,8 @@ export function isBreached(cluster: Cluster, now: number): boolean {
 }
 
 export interface Surge {
-  clusterId: string;
-  title: string;
-  zoneLabel: string;
+  /** المشكلة المتصاعدة كاملةً — العنوان والموقع يُصاغان بلغة العرض لا هنا */
+  cluster: Cluster;
   /** عدد البلاغات خلال نافذة الرصد */
   recentCount: number;
   windowMin: number;
@@ -122,23 +120,8 @@ export function detectSurges(
     if (c.status === "resolved") continue;
     const recentCount = recentByCluster.get(c.id) ?? 0;
     if (recentCount < threshold) continue;
-    surges.push({
-      clusterId: c.id,
-      title: c.title,
-      zoneLabel: zoneById(c.zoneId).label,
-      recentCount,
-      windowMin: Math.round(windowMs / 60000),
-    });
+    surges.push({ cluster: c, recentCount, windowMin: Math.round(windowMs / 60000) });
   }
 
   return surges.sort((a, b) => b.recentCount - a.recentCount);
-}
-
-/** صياغة مدة بالدقائق بصيغة عربية مقروءة */
-export function formatMinutes(min: number | null): string {
-  if (min === null) return "—";
-  if (min < 60) return `${min} دقيقة`;
-  const h = Math.floor(min / 60);
-  const m = min % 60;
-  return m ? `${h} س ${m} د` : `${h} ساعة`;
 }

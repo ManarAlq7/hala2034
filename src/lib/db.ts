@@ -10,6 +10,7 @@ import type {
   SeverityId,
   SourceId,
   StatusId,
+  TimelineEntry,
 } from "./types";
 
 /* -------------------------------------------------------------------------- */
@@ -36,7 +37,7 @@ interface ClusterRow {
   assigned_to: string;
   first_action_at: string | null;
   resolved_at: string | null;
-  timeline: { at: number; text: string }[] | null;
+  timeline: TimelineEntry[] | null;
   summary: ClusterSummary | null;
 }
 
@@ -263,8 +264,8 @@ async function readCluster(id: string): Promise<ClusterRow> {
   return data as ClusterRow;
 }
 
-export async function setStatusInDb(clusterId: string, status: StatusId, note: string) {
-  const now = Date.now();
+export async function setStatusInDb(clusterId: string, status: StatusId, entry: TimelineEntry) {
+  const now = entry.at;
   const row = await readCluster(clusterId);
 
   const { error } = await supabase()
@@ -274,7 +275,7 @@ export async function setStatusInDb(clusterId: string, status: StatusId, note: s
       // زمن أول إجراء يُسجَّل مرة واحدة: إعادة الفتح لا تُعيد ضبط قياس الاستجابة
       first_action_at: status === "new" ? row.first_action_at : (row.first_action_at ?? iso(now)),
       resolved_at: status === "resolved" ? iso(now) : null,
-      timeline: [...(row.timeline ?? []), { at: now, text: note }],
+      timeline: [...(row.timeline ?? []), entry],
     })
     .eq("id", clusterId);
   if (error) throw error;

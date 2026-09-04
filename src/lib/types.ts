@@ -1,3 +1,6 @@
+/** لغة العرض — العربية افتراضاً */
+export type Locale = "ar" | "en";
+
 export type CategoryId =
   | "crowding"
   | "cleanliness"
@@ -46,6 +49,23 @@ export interface Report {
  * الحالي هي ما يكشف أن الملخّص تقادم ويحتاج تحديثاً — بلا هذا الحقل لا سبيل
  * للتمييز بين ملخّص يصف المشكلة كاملةً وآخر يصف أول بلاغين منها فقط.
  */
+/**
+ * مدخلة في سجل المشكلة.
+ *
+ * أحداث النظام تُحفظ كمفتاح لا كنص جاهز، فتُصاغ بلغة العرض لحظة القراءة —
+ * ولو حُفظت مصاغةً لبقيت بلغة اللحظة التي وقعت فيها مهما تغيّرت لغة الواجهة.
+ * أما ملاحظات فريق العمليات فنصّ حرّ يُعرض كما كُتب.
+ */
+export interface TimelineEntry {
+  at: number;
+  /** ملاحظة كتبها فريق العمليات بنصّها */
+  text?: string;
+  /** حدث نظامي */
+  event?: "created" | "escalated" | "started" | "resolved" | "reopened";
+  /** عدد البلاغات وقت التصعيد — يظهر في صياغة حدث `escalated` */
+  count?: number;
+}
+
 export interface ClusterSummary {
   titleAr: string;
   titleEn: string;
@@ -77,7 +97,7 @@ export interface Cluster {
   /** لحظة الإغلاق — أساس قياس زمن المعالجة */
   resolvedAt?: number;
   /** سجل الإجراءات المتخذة */
-  timeline: { at: number; text: string }[];
+  timeline: TimelineEntry[];
   /** الملخّص المولَّد بنموذج لغوي — يغيب حتى يُستدعى بنجاح */
   summary?: ClusterSummary;
 }

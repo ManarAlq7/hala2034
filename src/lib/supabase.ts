@@ -19,8 +19,16 @@ let client: SupabaseClient | null = null;
 export function supabase(): SupabaseClient {
   if (!client) {
     if (!url || !key) throw new Error("قاعدة البيانات المشتركة غير مهيّأة");
-    // لا يوجد تسجيل دخول في هذا العرض، فلا داعي لحفظ جلسة
-    client = createClient(url, key, { auth: { persistSession: false } });
+    client = createClient(url, key, {
+      auth: {
+        // الجلسة تُحفظ ويُجدَّد رمزها تلقائياً: تحديث الصفحة لا يُخرج فريق
+        // العمليات من الكونسول في منتصف حدث جارٍ
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+        storageKey: "hala2034:auth",
+      },
+    });
   }
   return client;
 }

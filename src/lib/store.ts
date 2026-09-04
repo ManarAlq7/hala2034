@@ -1,7 +1,15 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
-import type { ChannelId, Classification, Cluster, Report, SourceId, StatusId } from "./types";
+import type {
+  ChannelId,
+  Classification,
+  Cluster,
+  Report,
+  SourceId,
+  StatusId,
+  TimelineEntry,
+} from "./types";
 import { absorbReport, classifyLocal, findOrCreateCluster } from "./ai";
 import { classifyReport } from "./classify";
 import {
@@ -139,8 +147,8 @@ function buildInitialState(now: number): AppState {
         resolvedAt,
         timeline: [
           ...c.timeline,
-          { at: firstActionAt, text: "الجهة المختصة باشرت المعالجة" },
-          { at: resolvedAt, text: "تم إغلاق المشكلة بعد المعالجة" },
+          { at: firstActionAt, event: "started" as const },
+          { at: resolvedAt, event: "resolved" as const },
         ],
       };
     }
@@ -149,7 +157,7 @@ function buildInitialState(now: number): AppState {
         ...c,
         status: "in_progress" as StatusId,
         firstActionAt,
-        timeline: [...c.timeline, { at: firstActionAt, text: "الجهة المختصة باشرت المعالجة" }],
+        timeline: [...c.timeline, { at: firstActionAt, event: "started" as const }],
       };
     }
     return c;
@@ -294,13 +302,19 @@ export async function submitReport(input: SubmitInput): Promise<SubmitResult> {
   return result;
 }
 
+/** الحدث الذي يُسجَّل في السجل عند تغيير الحالة */
+const STATUS_EVENT: Record<StatusId, TimelineEntry["event"]> = {
+  resolved: "resolved",
+  in_progress: "started",
+  new: "reopened",
+};
+
 export async function setClusterStatus(clusterId: string, status: StatusId) {
   const now = Date.now();
-  const note =
-    status === "resolved" ? "تم إغلاق المشكلة" : status === "in_progress" ? "بدأت المعالجة" : "أُعيد فتح المشكلة";
+  const event = STATUS_EVENT[status];
 
   if (hasSupabase) {
-    await setStatusInDb(clusterId, status, note);
+    await setStatusInDb(clusterId, status, { at: now, event });
     await refreshFromDb();
     return;
   }
@@ -314,7 +328,7 @@ export async function setClusterStatus(clusterId: string, status: StatusId) {
         status,
         firstActionAt: status === "new" ? c.firstActionAt : (c.firstActionAt ?? now),
         resolvedAt: status === "resolved" ? now : undefined,
-        timeline: [...c.timeline, { at: now, text: note }],
+        timeline: [...c.timeline, { at: now, event }],
       };
     }),
   });

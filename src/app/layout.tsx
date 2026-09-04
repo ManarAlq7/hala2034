@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
-import SiteHeader from "@/components/SiteHeader";
 
 const arabic = IBM_Plex_Sans_Arabic({
   variable: "--font-arabic",
@@ -11,24 +10,25 @@ const arabic = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata: Metadata = {
-  title: "هلا 2034 — ذكاء تشغيلي لتجربة الجماهير",
+  title: "HALA 2034 — Fan Experience Operations",
   description:
-    "منصة ذكية متعددة اللغات تستقبل ملاحظات الجماهير عبر مختلف القنوات، تصنّفها وتجمّع المتشابه منها في مشكلة واحدة، وتعرضها على لوحة متابعة وخريطة حرارية.",
+    "AI-powered fan experience operations for the FIFA World Cup 2034. Multilingual fan reports are translated, classified, grouped into single issues, and summarised for the operations team on a live console.",
 };
 
+/**
+ * الجذر لا يحمل أي هيكل مرئي.
+ *
+ * للتطبيق واجهتان مختلفتان في الغرض والشكل — واجهة الجمهور وكونسول العمليات —
+ * ولكلٍّ منهما هيكلها الخاص. ترويسة واحدة تجمعهما هي ما جعل النسخة السابقة
+ * تخلط بين مَن يرسل بلاغاً ومَن يديره.
+ *
+ * الخادم يُصيّر بالعربية دائماً، ثم يصحّح lib/i18n اللغة والاتجاه بعد الترطيب
+ * إن كان الاختيار المحفوظ مختلفاً — فلا يختلف تصيير الخادم عن أول تصيير للعميل.
+ */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ar" dir="rtl" className={`${arabic.variable} h-full`}>
-      <body className="min-h-full flex flex-col antialiased">
-        <SiteHeader />
-        <main className="flex-1">{children}</main>
-        <footer className="border-t border-hairline bg-surface">
-          <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-5 py-6 text-sm text-ink-muted sm:flex-row">
-            <span>هلا 2034 — نموذج أولي لذكاء تشغيلي لتجربة جماهير كأس العالم</span>
-            <span className="text-gold-600 font-semibold">طموحنا عنان السماء</span>
-          </div>
-        </footer>
-      </body>
+      <body className="min-h-full antialiased">{children}</body>
     </html>
   );
 }

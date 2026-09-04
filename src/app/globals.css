@@ -1,96 +1,331 @@
 @import "tailwindcss";
 
-/* ---------------------------------------------------------------- */
-/*  الهوية البصرية — هلا 2034                                       */
-/* ---------------------------------------------------------------- */
-:root {
-  --brand-900: #083d28;
-  --brand-800: #0b4d33;
-  --brand-700: #0e5a3c;
-  --brand-600: #146c49;
-  --brand-500: #1f8558;
-  --brand-100: #e3efe9;
-  --brand-50: #f2f8f5;
-  --gold-600: #a8863f;
-  --gold-500: #c3a15a;
-  --gold-200: #ecdfc2;
+/* ══════════════════════════════════════════════════════════════════ */
+/*  HALA 2034 — نظام التصميم                                          */
+/*                                                                    */
+/*  قاعدة داكنة عميقة بلمسة خضراء، وبريق ذهبي محدود.                   */
+/*  المرجع البصري: غرفة عمليات لا لوحة إدارة عامة — فالخلفية تنسحب      */
+/*  والبيانات هي التي تتقدّم. اللون لا يُستخدم للزينة: الأحمر خطر،       */
+/*  والكهرماني تحذير، والأخضر إغلاق، والذهبي للهوية وحدها.              */
+/* ══════════════════════════════════════════════════════════════════ */
 
-  --background: #f4f7f5;
-  --surface: #ffffff;
-  --ink: #14251d;
-  --ink-muted: #5d7268;
-  --hairline: #e2eae5;
+:root {
+  /* الأسطح — ست درجات تكفي لبناء العمق كله */
+  --bg: #070c0a;
+  --surface: #0e1613;
+  --surface-2: #131f1a;
+  --surface-3: #1a2823;
+  --line: #1e2f28;
+  --line-strong: #2c443a;
+
+  /* النص */
+  --text: #e6efea;
+  --text-muted: #8ba79a;
+  --text-dim: #5c766b;
+
+  /* الهوية */
+  --brand: #2fbf7e;
+  --brand-strong: #26a86d;
+  --brand-dim: #1a6b47;
+  --brand-wash: #0f2a1f;
+  --gold: #c9a961;
+  --gold-dim: #8a7440;
+
+  /* الدلالة */
+  --danger: #f2555a;
+  --danger-wash: #2a1214;
+  --warn: #e8a33d;
+  --warn-wash: #2a2011;
+  --ok: #3ec97e;
+  --ok-wash: #10261a;
+  --info: #4ea8de;
+  --info-wash: #10222e;
+
+  --radius: 0.75rem;
+  --radius-lg: 1rem;
 }
 
 @theme inline {
-  --color-background: var(--background);
+  --color-bg: var(--bg);
   --color-surface: var(--surface);
-  --color-ink: var(--ink);
-  --color-ink-muted: var(--ink-muted);
-  --color-hairline: var(--hairline);
-  --color-brand-50: var(--brand-50);
-  --color-brand-100: var(--brand-100);
-  --color-brand-500: var(--brand-500);
-  --color-brand-600: var(--brand-600);
-  --color-brand-700: var(--brand-700);
-  --color-brand-800: var(--brand-800);
-  --color-brand-900: var(--brand-900);
-  --color-gold-200: var(--gold-200);
-  --color-gold-500: var(--gold-500);
-  --color-gold-600: var(--gold-600);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-dim: var(--text-dim);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-dim: var(--brand-dim);
+  --color-brand-wash: var(--brand-wash);
+  --color-gold: var(--gold);
+  --color-gold-dim: var(--gold-dim);
+  --color-danger: var(--danger);
+  --color-danger-wash: var(--danger-wash);
+  --color-warn: var(--warn);
+  --color-warn-wash: var(--warn-wash);
+  --color-ok: var(--ok);
+  --color-ok-wash: var(--ok-wash);
+  --color-info: var(--info);
+  --color-info-wash: var(--info-wash);
   --font-sans: var(--font-arabic), "Segoe UI", Tahoma, sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--ink);
+  background: var(--bg);
+  color: var(--text);
   font-family: var(--font-arabic), "Segoe UI", Tahoma, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* الأرقام دائماً من اليسار لليمين داخل النص العربي */
+/* الأرقام دائماً من اليسار لليمين، حتى داخل نص عربي */
 .nums {
   direction: ltr;
   unicode-bidi: isolate;
   display: inline-block;
+  font-variant-numeric: tabular-nums;
 }
 
-/* خلفية الترويسة المموّجة المستوحاة من هوية المشروع */
-.brand-gradient {
-  background:
-    radial-gradient(1200px 380px at 82% -140px, rgba(195, 161, 90, 0.28), transparent 62%),
-    linear-gradient(135deg, var(--brand-900) 0%, var(--brand-700) 52%, var(--brand-600) 100%);
-}
-
-.brand-dots {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px);
-  background-size: 12px 12px;
-}
+/* ------------------------------- الأسطح ------------------------------- */
 
 .card {
   background: var(--surface);
-  border: 1px solid var(--hairline);
-  border-radius: 1rem;
-  box-shadow: 0 1px 2px rgba(20, 37, 29, 0.04);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
 }
 
-/* شريط تمرير أنعم داخل القوائم الطويلة */
+.card-2 {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.card-link {
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.card-link:hover {
+  border-color: var(--line-strong);
+  background: var(--surface-2);
+}
+
+/* وهج خافت خلف الترويسات — الحد الأقصى المسموح من الزينة */
+.aura {
+  background:
+    radial-gradient(900px 260px at 78% -120px, rgba(47, 191, 126, 0.1), transparent 65%),
+    radial-gradient(600px 200px at 10% -80px, rgba(201, 169, 97, 0.07), transparent 60%);
+}
+
+.grid-lines {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 34px 34px;
+}
+
+/* ------------------------------- الأزرار ------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--radius);
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--brand-strong);
+  color: #04120c;
+}
+.btn-primary:not(:disabled):hover {
+  background: var(--brand);
+}
+
+.btn-ghost {
+  background: var(--surface-2);
+  border-color: var(--line);
+  color: var(--text);
+}
+.btn-ghost:not(:disabled):hover {
+  background: var(--surface-3);
+  border-color: var(--line-strong);
+}
+
+.btn-danger {
+  background: var(--danger-wash);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.btn-danger:not(:disabled):hover {
+  background: var(--danger);
+  color: #1a0708;
+}
+
+.btn-sm {
+  padding: 0.375rem 0.7rem;
+  font-size: 0.75rem;
+}
+
+/* ------------------------------- الحقول ------------------------------- */
+
+.input {
+  width: 100%;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.input::placeholder {
+  color: var(--text-dim);
+}
+.input:focus {
+  border-color: var(--brand-dim);
+  box-shadow: 0 0 0 3px rgba(47, 191, 126, 0.12);
+}
+
+.label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.4rem;
+}
+
+/* ------------------------------- الشارات ------------------------------- */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 9999px;
+  border: 1px solid;
+  padding: 0.1875rem 0.5625rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chip-neutral {
+  background: var(--surface-3);
+  border-color: var(--line);
+  color: var(--text-muted);
+}
+.chip-brand {
+  background: var(--brand-wash);
+  border-color: var(--brand-dim);
+  color: var(--brand);
+}
+.chip-danger {
+  background: var(--danger-wash);
+  border-color: rgba(242, 85, 90, 0.4);
+  color: var(--danger);
+}
+.chip-warn {
+  background: var(--warn-wash);
+  border-color: rgba(232, 163, 61, 0.4);
+  color: var(--warn);
+}
+.chip-ok {
+  background: var(--ok-wash);
+  border-color: rgba(62, 201, 126, 0.35);
+  color: var(--ok);
+}
+.chip-info {
+  background: var(--info-wash);
+  border-color: rgba(78, 168, 222, 0.35);
+  color: var(--info);
+}
+
+/* ------------------------------- الجداول ------------------------------- */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+.table thead th {
+  text-align: inherit;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.table tbody td {
+  padding: 0.75rem 0.875rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+.table tbody tr {
+  transition: background 0.12s ease;
+}
+.table tbody tr:hover {
+  background: var(--surface-2);
+}
+
+/* ----------------------------- شريط التنقل ----------------------------- */
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: var(--radius);
+  padding: 0.5625rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.nav-link:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.nav-link[data-active="true"] {
+  background: var(--brand-wash);
+  color: var(--brand);
+}
+
+/* ------------------------------- التمرير ------------------------------- */
+
 .thin-scroll::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 .thin-scroll::-webkit-scrollbar-thumb {
-  background: #cfdcd5;
+  background: var(--line-strong);
   border-radius: 99px;
 }
 .thin-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
 
+/* ------------------------------- الحركة ------------------------------- */
+
 @keyframes pulse-ring {
-  0% { transform: scale(0.85); opacity: 0.55; }
-  70% { transform: scale(1.5); opacity: 0; }
-  100% { transform: scale(1.5); opacity: 0; }
+  0% { transform: scale(0.85); opacity: 0.5; }
+  70% { transform: scale(1.55); opacity: 0; }
+  100% { transform: scale(1.55); opacity: 0; }
 }
 .pulse-ring::after {
   content: "";
@@ -102,7 +337,11 @@ body {
 }
 
 @keyframes rise {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.rise { animation: rise 0.35s ease-out both; }
+.rise { animation: rise 0.3s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise, .pulse-ring::after { animation: none; }
+}

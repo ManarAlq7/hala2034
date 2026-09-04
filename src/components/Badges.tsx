@@ -1,36 +1,53 @@
-import { categoryById, severityDef, statusDef } from "@/lib/taxonomy";
+"use client";
+
+import {
+  categoryById,
+  categoryLabel,
+  severityDef,
+  severityLabel,
+  statusDef,
+  statusLabel,
+  type Tone,
+} from "@/lib/taxonomy";
+import { useLocale } from "@/lib/i18n";
 import type { CategoryId, SeverityId, StatusId } from "@/lib/types";
 
-const base =
-  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset whitespace-nowrap";
+/** النغمة إلى صنف الشارة — الترجمة الوحيدة بين نظام التصميم والـ CSS */
+export const toneClass: Record<Tone, string> = {
+  neutral: "chip-neutral",
+  info: "chip-info",
+  warn: "chip-warn",
+  danger: "chip-danger",
+  ok: "chip-ok",
+  brand: "chip-brand",
+};
 
 export function SeverityBadge({ id }: { id: SeverityId }) {
-  const s = severityDef(id);
+  const { locale } = useLocale();
+  const def = severityDef(id);
   return (
-    <span className={`${base} ${s.chip}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${s.dot}`} />
-      {s.label}
+    <span className={`chip ${toneClass[def.tone]}`}>
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: def.color }} />
+      {severityLabel(id, locale)}
     </span>
   );
 }
 
 export function StatusBadge({ id }: { id: StatusId }) {
-  const s = statusDef(id);
-  return <span className={`${base} ${s.chip}`}>{s.label}</span>;
+  const { locale } = useLocale();
+  return <span className={`chip ${toneClass[statusDef(id).tone]}`}>{statusLabel(id, locale)}</span>;
 }
 
 export function CategoryChip({ id }: { id: CategoryId }) {
-  const c = categoryById(id);
+  const { locale } = useLocale();
   return (
-    <span className={`${base} bg-brand-50 text-brand-800 ring-brand-100`}>
-      <span aria-hidden>{c.icon}</span>
-      {c.label}
+    <span className="chip chip-neutral">
+      <span aria-hidden>{categoryById(id).icon}</span>
+      {categoryLabel(id, locale)}
     </span>
   );
 }
 
 export function MetaChip({ children }: { children: React.ReactNode }) {
-  return (
-    <span className={`${base} bg-slate-50 text-slate-600 ring-slate-200 font-medium`}>{children}</span>
-  );
+  return <span className="chip chip-neutral">{children}</span>;
 }

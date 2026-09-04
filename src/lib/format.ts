@@ -1,7 +1,13 @@
-/** صياغة الوقت النسبي بالعربية */
-export function relativeTime(ts: number, now: number = Date.now()): string {
-  const diff = Math.max(0, now - ts);
-  const min = Math.floor(diff / 60000);
+import type { Locale } from "./types";
+
+/* -------------------------------------------------------------------------- */
+/*  صياغة الوقت                                                                */
+/*                                                                             */
+/*  العربية تصرّف العدد (مفرد ومثنى وجمع)، والإنجليزية لا تفعل. لذا لكل لغة      */
+/*  صياغتها هنا بدل قالب واحد يُملأ بالأرقام فيخرج ركيكاً في إحداهما.             */
+/* -------------------------------------------------------------------------- */
+
+function relativeAr(min: number): string {
   if (min < 1) return "الآن";
   if (min === 1) return "قبل دقيقة";
   if (min === 2) return "قبل دقيقتين";
@@ -17,6 +23,24 @@ export function relativeTime(ts: number, now: number = Date.now()): string {
   return `قبل ${day} أيام`;
 }
 
+function relativeEn(min: number): string {
+  if (min < 1) return "just now";
+  if (min === 1) return "1 minute ago";
+  if (min < 60) return `${min} minutes ago`;
+  const hr = Math.floor(min / 60);
+  if (hr === 1) return "1 hour ago";
+  if (hr < 24) return `${hr} hours ago`;
+  const day = Math.floor(hr / 24);
+  if (day === 1) return "yesterday";
+  return `${day} days ago`;
+}
+
+/** صياغة الوقت النسبي بلغة العرض */
+export function relativeTime(ts: number, locale: Locale = "ar", now: number = Date.now()): string {
+  const min = Math.floor(Math.max(0, now - ts) / 60000);
+  return locale === "en" ? relativeEn(min) : relativeAr(min);
+}
+
 /** الوقت بصيغة ٢٤ ساعة */
 export function clockTime(ts: number): string {
   const d = new Date(ts);
@@ -25,10 +49,17 @@ export function clockTime(ts: number): string {
   return `${h}:${m}`;
 }
 
-/** صياغة عدد البلاغات بصيغة عربية سليمة */
-export function countLabel(n: number, singular: string, dual: string, plural: string): string {
-  if (n === 1) return singular;
-  if (n === 2) return dual;
-  if (n <= 10) return `${n} ${plural}`;
-  return `${n} ${singular}`;
+/** صياغة مدة بالدقائق */
+export function formatMinutes(min: number | null, locale: Locale = "ar"): string {
+  if (min === null) return "—";
+  if (locale === "en") {
+    if (min < 60) return `${min} min`;
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return m ? `${h}h ${m}m` : `${h}h`;
+  }
+  if (min < 60) return `${min} دقيقة`;
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return m ? `${h} س ${m} د` : `${h} ساعة`;
 }

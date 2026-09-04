@@ -1,5 +1,13 @@
-import type { CategoryId, Classification, Cluster, Report, SeverityId } from "./types";
-import { ZONES, categoryById, zoneById } from "./taxonomy";
+import type {
+  CategoryId,
+  Classification,
+  Cluster,
+  Locale,
+  Report,
+  SeverityId,
+  TimelineEntry,
+} from "./types";
+import { ZONES, categoryById, pick, zoneLabel } from "./taxonomy";
 
 /* -------------------------------------------------------------------------- */
 /*  محرك الفهم والمعالجة — النسخة المحلية                                       */
@@ -48,21 +56,22 @@ export function detectLang(text: string): string {
   return "en";
 }
 
-export const LANG_LABELS: Record<string, string> = {
-  ar: "العربية",
-  en: "الإنجليزية",
-  es: "الإسبانية",
-  fr: "الفرنسية",
-  de: "الألمانية",
-  ru: "الروسية",
-  zh: "الصينية",
-  ja: "اليابانية",
-  ko: "الكورية",
-  hi: "الهندية",
-  fa: "الفارسية",
+export const LANG_LABELS: Record<string, { ar: string; en: string }> = {
+  ar: { ar: "العربية", en: "Arabic" },
+  en: { ar: "الإنجليزية", en: "English" },
+  es: { ar: "الإسبانية", en: "Spanish" },
+  fr: { ar: "الفرنسية", en: "French" },
+  de: { ar: "الألمانية", en: "German" },
+  ru: { ar: "الروسية", en: "Russian" },
+  zh: { ar: "الصينية", en: "Chinese" },
+  ja: { ar: "اليابانية", en: "Japanese" },
+  ko: { ar: "الكورية", en: "Korean" },
+  hi: { ar: "الهندية", en: "Hindi" },
+  fa: { ar: "الفارسية", en: "Persian" },
 };
 
-export const langLabel = (code: string) => LANG_LABELS[code] ?? code;
+export const langLabel = (code: string, locale: Locale = "ar") =>
+  LANG_LABELS[code]?.[locale] ?? code;
 
 /* ----------------------------- الأنواع الفرعية ----------------------------- */
 
@@ -70,6 +79,7 @@ export interface SubtypeDef {
   /** معرّف مستقل عن اللغة، بصيغة category:subtype */
   id: string;
   label: string;
+  labelEn: string;
   category: CategoryId;
   terms: string[];
   /** الحد الأدنى لخطورة هذا النوع مهما كانت صياغة البلاغ */
@@ -82,6 +92,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "medical:emergency",
     label: "حالة طبية طارئة",
+    labelEn: "Medical emergency",
     category: "medical",
     floor: "critical",
     terms: [
@@ -93,6 +104,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "medical:heat",
     label: "إجهاد حراري",
+    labelEn: "Heat exhaustion",
     category: "medical",
     floor: "high",
     terms: ["ضربه شمس", "دوخه", "اعياء", "جفاف", "heat stroke", "heatstroke", "dizzy", "dehydrated", "faint"],
@@ -102,6 +114,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "safety:fire",
     label: "حريق أو دخان",
+    labelEn: "Fire or smoke",
     category: "safety",
     floor: "critical",
     terms: ["حريق", "دخان", "شب النار", "fire", "smoke", "burning", "incendio", "fumee"],
@@ -109,6 +122,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "safety:crush",
     label: "تدافع وخطر تكدّس",
+    labelEn: "Crush risk",
     category: "safety",
     floor: "critical",
     terms: ["تدافع", "دهس", "تكدس خطير", "stampede", "crush", "trampled"],
@@ -116,6 +130,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "safety:missing_person",
     label: "شخص مفقود",
+    labelEn: "Missing person",
     category: "safety",
     floor: "critical",
     terms: ["طفل ضايع", "طفل مفقود", "ولدي ضاع", "missing child", "lost child", "nino perdido"],
@@ -123,6 +138,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "safety:fight",
     label: "مشاجرة",
+    labelEn: "Fight",
     category: "safety",
     floor: "high",
     terms: ["مشاجره", "عراك", "تعارك", "شجار", "fight", "brawl", "altercation", "bagarre", "pelea"],
@@ -130,6 +146,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "safety:theft",
     label: "سرقة",
+    labelEn: "Theft",
     category: "safety",
     floor: "high",
     terms: ["سرقه", "سرقوا", "انسرق", "نشل", "theft", "stolen", "pickpocket", "robo", "vol"],
@@ -137,6 +154,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "safety:harassment",
     label: "تحرّش أو مضايقة",
+    labelEn: "Harassment",
     category: "safety",
     floor: "high",
     terms: ["تحرش", "مضايقه", "harassment", "harassed", "acoso"],
@@ -144,6 +162,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "safety:hazard",
     label: "خطر في الموقع",
+    labelEn: "Site hazard",
     category: "safety",
     floor: "high",
     terms: ["سلك مكشوف", "تسرب", "زجاج مكسور", "ارضيه زلقه", "غير امن", "خطر", "unsafe", "hazard", "danger", "leak", "peligro"],
@@ -155,6 +174,7 @@ export const SUBTYPES: SubtypeDef[] = [
     // الجهة بنفس الإجراء، فتُجمَّع تحت نوع واحد بدل تجزئتها إلى تذكرتين.
     id: "crowding:congestion",
     label: "ازدحام وطوابير",
+    labelEn: "Crowding and queues",
     category: "crowding",
     terms: [
       "طابور", "طوابير", "صف طويل", "الصف ما يتحرك", "واقفين", "الدور طويل",
@@ -168,6 +188,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "crowding:exits",
     label: "ضيق المخارج",
+    labelEn: "Narrow exits",
     category: "crowding",
     terms: ["مخرج", "مخارج", "منافذ خروج", "الخروج صعب", "exit", "exits", "no way out", "salida"],
   },
@@ -176,24 +197,28 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "transport:bus",
     label: "الحافلات المكوكية",
+    labelEn: "Shuttle buses",
     category: "transport",
     terms: ["باص", "باصات", "حافله", "حافلات", "الباص ما وصل", "bus", "buses", "shuttle", "autobus", "navette"],
   },
   {
     id: "transport:train",
     label: "القطار والمترو",
+    labelEn: "Train and metro",
     category: "transport",
     terms: ["قطار", "مترو", "المحطه", "train", "metro", "subway", "station", "tren", "gare"],
   },
   {
     id: "transport:parking",
     label: "المواقف",
+    labelEn: "Parking",
     category: "transport",
     terms: ["مواقف", "الموقف", "موقف السياره", "ما فيه موقف", "parking", "car park", "aparcamiento"],
   },
   {
     id: "transport:taxi",
     label: "سيارات الأجرة",
+    labelEn: "Taxis",
     category: "transport",
     terms: ["تاكسي", "اجره", "توصيله", "كابتن", "taxi", "cab", "ride", "uber"],
   },
@@ -203,6 +228,7 @@ export const SUBTYPES: SubtypeDef[] = [
     // عطل القارئ ومنع الدخول حادثة واحدة لدى نفس الجهة عند نفس البوابة
     id: "ticketing:entry",
     label: "التذاكر والدخول",
+    labelEn: "Tickets and entry",
     category: "ticketing",
     terms: [
       "باركود", "الكود ما يقرا", "ما تنقرا", "جهاز مسح", "جهاز المسح", "قارئ التذاكر", "qr",
@@ -216,12 +242,14 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "cleanliness:odor",
     label: "روائح كريهة",
+    labelEn: "Bad odours",
     category: "cleanliness",
     terms: ["رائحه", "ريحه كريهه", "ريحه", "bad smell", "stink", "odor", "odour", "mal olor"],
   },
   {
     id: "cleanliness:waste",
     label: "نفايات ومهملات",
+    labelEn: "Waste and litter",
     category: "cleanliness",
     terms: [
       "قمامه", "زباله", "مهملات", "بقايا", "نفايات", "سلة ممتلئه", "وسخ", "متسخ", "نظافه",
@@ -233,6 +261,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "facilities:toilet",
     label: "دورات المياه",
+    labelEn: "Toilets",
     category: "facilities",
     terms: [
       "دورات المياه", "دوره مياه", "حمام", "حمامات", "مغسله", "توالیت",
@@ -242,24 +271,28 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "facilities:water",
     label: "مياه الشرب",
+    labelEn: "Drinking water",
     category: "facilities",
     terms: ["ماء الشرب", "ماي", "مياه", "برادات", "ما فيه ماء", "drinking water", "no water", "water fountain", "agua", "eau"],
   },
   {
     id: "facilities:elevator",
     label: "المصاعد",
+    labelEn: "Lifts",
     category: "facilities",
     terms: ["مصعد", "المصاعد", "السلم الكهربائي", "elevator", "lift", "escalator", "ascensor"],
   },
   {
     id: "facilities:seating",
     label: "المقاعد",
+    labelEn: "Seating",
     category: "facilities",
     terms: ["مقعد", "مقاعد", "كرسي", "كراسي", "الجلوس", "seat", "seats", "seating", "chair", "asiento", "siege"],
   },
   {
     id: "facilities:climate",
     label: "التكييف والحرارة",
+    labelEn: "Air conditioning and heat",
     category: "facilities",
     terms: [
       "مكيف", "التكييف", "حر شديد", "الحر", "مظلات", "تهويه",
@@ -271,24 +304,28 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "food:price",
     label: "غلاء الأسعار",
+    labelEn: "High prices",
     category: "food",
     terms: ["غالي", "غاليه", "الاسعار", "سعر مبالغ", "expensive", "overpriced", "prices", "caro", "cher"],
   },
   {
     id: "food:availability",
     label: "نفاد الطعام والمشروبات",
+    labelEn: "Food and drink ran out",
     category: "food",
     terms: ["نفد", "خلص الاكل", "ما فيه اكل", "مقفل", "sold out", "ran out", "no food", "closed", "agotado"],
   },
   {
     id: "food:quality",
     label: "جودة الطعام",
+    labelEn: "Food quality",
     category: "food",
     terms: ["الاكل بارد", "جوده", "طعم", "غير صالح", "cold food", "quality", "stale", "undercooked"],
   },
   {
     id: "food:general",
     label: "خدمات الطعام",
+    labelEn: "Food services",
     category: "food",
     terms: ["اكل", "طعام", "مطعم", "كافيه", "قهوه", "عصير", "مشروب", "food", "drink", "restaurant", "coffee", "comida", "bebida"],
   },
@@ -297,6 +334,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "wayfinding:signage",
     label: "نقص اللوحات الإرشادية",
+    labelEn: "Missing signage",
     category: "wayfinding",
     terms: [
       "لوحه", "لوحات", "ارشاديه", "الاشارات", "غير واضحه", "ما فيه ارشاد",
@@ -306,6 +344,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "wayfinding:lost",
     label: "تيه وصعوبة الوصول",
+    labelEn: "Hard to find the way",
     category: "wayfinding",
     terms: [
       "تايه", "ضايع", "ما الاقي", "ما اعرف وين", "وين", "خريطه", "ادور",
@@ -317,6 +356,7 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "connectivity:network",
     label: "ضعف الشبكة",
+    labelEn: "Weak network",
     category: "connectivity",
     terms: [
       "الشبكه", "النت", "انترنت", "واي فاي", "تغطيه", "ما فيه شبكه", "بطيء",
@@ -326,12 +366,14 @@ export const SUBTYPES: SubtypeDef[] = [
   {
     id: "connectivity:app",
     label: "أعطال التطبيق",
+    labelEn: "App failures",
     category: "connectivity",
     terms: ["التطبيق ما يفتح", "التطبيق", "الموقع ما يفتح", "app not working", "app crashes", "the app", "website down"],
   },
   {
     id: "connectivity:charging",
     label: "الشحن والبطارية",
+    labelEn: "Charging and battery",
     category: "connectivity",
     terms: ["شحن", "شاحن", "بطاريه", "charging", "charger", "battery", "power bank"],
   },
@@ -342,9 +384,10 @@ const SUBTYPE_BY_ID = new Map(SUBTYPES.map((s) => [s.id, s]));
 /** النوع الفرعي الافتراضي حين لا يطابق البلاغ أي قاموس */
 export const GENERAL_SUBTYPE = "other:general";
 
-export function subtypeLabel(id: string): string {
-  if (id === GENERAL_SUBTYPE) return "ملاحظة عامة";
-  return SUBTYPE_BY_ID.get(id)?.label ?? id;
+export function subtypeLabel(id: string, locale: Locale = "ar"): string {
+  if (id === GENERAL_SUBTYPE) return pick(locale, "ملاحظة عامة", "General note");
+  const def = SUBTYPE_BY_ID.get(id);
+  return def ? pick(locale, def.label, def.labelEn) : id;
 }
 
 export function subtypeCategory(id: string): CategoryId {
@@ -451,8 +494,27 @@ export function classifyLocal(text: string, hintZone: string): Classification {
 /** نافذة التجميع: البلاغات المتشابهة خلال ٩٠ دقيقة تُعدّ مشكلة واحدة */
 export const CLUSTER_WINDOW_MS = 90 * 60 * 1000;
 
-export function clusterTitle(subtype: string, zoneId: string): string {
-  return `${subtypeLabel(subtype)} — ${zoneById(zoneId).label}`;
+/**
+ * عنوان قالبي من النوع الفرعي والموقع.
+ *
+ * يُشتق عند العرض لا عند الإنشاء، فيتبع لغة الواجهة حتى في مشكلة أُنشئت قبل
+ * تبديل اللغة. ويستُبدل بعنوان الملخّص المولَّد متى توفّر.
+ */
+export function clusterTitle(subtype: string, zoneId: string, locale: Locale = "ar"): string {
+  return `${subtypeLabel(subtype, locale)} — ${zoneLabel(zoneId, locale)}`;
+}
+
+/**
+ * العنوان المعروض لمشكلة: الملخّص المولَّد إن وُجد، وإلا العنوان القالبي.
+ *
+ * الملخّص يصف ما يقوله المشجّعون فعلاً («المصعد الشرقي متوقّف منذ الشوط الأول»)
+ * بينما العنوان القالبي يصف التصنيف («المصاعد — الممرات الداخلية»). فحيثما وُجد
+ * ملخّص كان أنفع لفريق العمليات.
+ */
+export function clusterHeading(cluster: Cluster, locale: Locale = "ar"): string {
+  const summary = cluster.summary;
+  if (summary) return locale === "en" ? summary.titleEn : summary.titleAr;
+  return clusterTitle(cluster.subtype, cluster.zoneId, locale);
 }
 
 /**
@@ -487,7 +549,7 @@ export function findOrCreateCluster(
     firstSeen: at,
     lastSeen: at,
     assignedTo: categoryById(c.category).owner,
-    timeline: [{ at, text: "أُنشئت المشكلة تلقائياً من أول بلاغ وأُحيلت للجهة المختصة" }],
+    timeline: [{ at, event: "created" }],
   };
   return { cluster, isNew: true };
 }
@@ -517,16 +579,13 @@ export function absorbReport(
   reportCount: number,
   at: number,
   isNew: boolean,
-): { severity: SeverityId; timeline: { at: number; text: string }[] } {
+): { severity: SeverityId; timeline: TimelineEntry[] } {
   const base = isNew ? c.severity : maxSeverity(cluster.severity, c.severity);
   const severity = escalate(base, reportCount);
   const timeline = [...cluster.timeline];
 
   if (!isNew && severity !== cluster.severity) {
-    timeline.push({
-      at,
-      text: `رُفعت درجة الخطورة تلقائياً بعد وصول ${reportCount} بلاغات متشابهة`,
-    });
+    timeline.push({ at, event: "escalated", count: reportCount });
   }
 
   return { severity, timeline };

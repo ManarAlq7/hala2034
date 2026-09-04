@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useLocale } from "@/lib/i18n";
+import type { StringKey } from "@/lib/strings";
 
 /** واجهة التعرّف على الكلام في المتصفح (Web Speech API) */
 interface SpeechRecognitionLike {
@@ -9,7 +11,12 @@ interface SpeechRecognitionLike {
   interimResults: boolean;
   start: () => void;
   stop: () => void;
-  onresult: ((e: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null;
+  onresult:
+    | ((e: {
+        resultIndex: number;
+        results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }>;
+      }) => void)
+    | null;
   onerror: ((e: { error?: string }) => void) | null;
   onend: (() => void) | null;
 }
@@ -40,6 +47,7 @@ interface Props {
 }
 
 export default function VoiceInput({ onTranscript }: Props) {
+  const { t } = useLocale();
   // قراءة قدرة المتصفح بعد الترطيب فقط، تفادياً لاختلاف الخادم عن العميل
   const supported = useSyncExternalStore(
     noopSubscribe,
@@ -49,7 +57,7 @@ export default function VoiceInput({ onTranscript }: Props) {
   const [listening, setListening] = useState(false);
   const [lang, setLang] = useState("ar-SA");
   const [interim, setInterim] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<StringKey | null>(null);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
 
   // إيقاف أي تسجيل جارٍ عند مغادرة الصفحة
@@ -72,9 +80,9 @@ export default function VoiceInput({ onTranscript }: Props) {
       let partial = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const res = e.results[i];
-        const t = res[0]?.transcript ?? "";
-        if (res.isFinal) finalText += t;
-        else partial += t;
+        const chunk = res[0]?.transcript ?? "";
+        if (res.isFinal) finalText += chunk;
+        else partial += chunk;
       }
       setInterim(partial);
       if (finalText.trim()) {
@@ -83,11 +91,7 @@ export default function VoiceInput({ onTranscript }: Props) {
       }
     };
     rec.onerror = (e) => {
-      setError(
-        e.error === "not-allowed"
-          ? "لم يُسمح بالوصول إلى المايكروفون. فعّل الإذن من إعدادات المتصفح."
-          : "تعذّر التعرّف على الصوت. جرّب مرة أخرى أو اكتب البلاغ نصاً.",
-      );
+      setError(e.error === "not-allowed" ? "voice.denied" : "voice.failed");
       setListening(false);
     };
     rec.onend = () => {
@@ -101,7 +105,7 @@ export default function VoiceInput({ onTranscript }: Props) {
       rec.start();
       setListening(true);
     } catch {
-      setError("تعذّر بدء التسجيل.");
+      setError("voice.startFailed");
     }
   };
 
@@ -109,35 +113,31 @@ export default function VoiceInput({ onTranscript }: Props) {
 
   if (!supported) {
     return (
-      <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800 ring-1 ring-amber-200">
-        المتصفح الحالي لا يدعم الإدخال الصوتي. استخدم Chrome أو Edge، أو اكتب البلاغ نصاً.
+      <p className="rounded-xl border border-warn/35 bg-warn-wash px-3 py-2.5 text-xs text-warn">
+        {t("voice.unsupported")}
       </p>
     );
   }
 
   return (
-    <div className="rounded-xl bg-brand-50 p-3 ring-1 ring-brand-100">
+    <div className="card-2 p-4">
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={toggle}
-          className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold text-white transition ${
-            listening ? "bg-red-600 hover:bg-red-700" : "bg-brand-700 hover:bg-brand-800"
-          }`}
+          className={`btn ${listening ? "btn-danger" : "btn-primary"}`}
         >
-          <span className="relative grid h-4 w-4 place-items-center">
-            <span aria-hidden>{listening ? "■" : "🎙"}</span>
-          </span>
-          {listening ? "إيقاف التسجيل" : "تسجيل صوتي"}
+          <span aria-hidden>{listening ? "■" : "🎙"}</span>
+          {listening ? t("voice.stop") : t("voice.record")}
         </button>
 
-        <label className="flex items-center gap-2 text-xs text-ink-muted">
-          لغة النطق
+        <label className="flex items-center gap-2 text-xs text-text-muted">
+          {t("voice.lang")}
           <select
             value={lang}
             onChange={(e) => setLang(e.target.value)}
             disabled={listening}
-            className="rounded-lg border border-hairline bg-white px-2 py-1 text-xs text-ink"
+            className="input w-auto px-2 py-1 text-xs"
           >
             {LANGS.map((l) => (
               <option key={l.code} value={l.code}>
@@ -148,18 +148,16 @@ export default function VoiceInput({ onTranscript }: Props) {
         </label>
 
         {listening && (
-          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-red-600" />
-            جارٍ الاستماع…
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-danger">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-danger" />
+            {t("voice.listening")}
           </span>
         )}
       </div>
 
-      {interim && <p className="mt-2 text-sm text-ink-muted">{interim}</p>}
-      {error && <p className="mt-2 text-xs font-semibold text-red-700">{error}</p>}
-      <p className="mt-2 text-[11px] text-ink-muted">
-        يُحوَّل الصوت إلى نص داخل المتصفح ثم يمر على نفس محرك التصنيف.
-      </p>
+      {interim && <p className="mt-2.5 text-sm text-text-muted">{interim}</p>}
+      {error && <p className="mt-2.5 text-xs font-semibold text-danger">{t(error)}</p>}
+      <p className="mt-2.5 text-[11px] text-text-dim">{t("voice.hint")}</p>
     </div>
   );
 }
