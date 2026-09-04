@@ -4,8 +4,12 @@
     {
       "name": "hala2034",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 3000
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 3100,
+      "autoPort": true
     }
   ]
 }

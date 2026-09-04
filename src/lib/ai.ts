@@ -502,6 +502,36 @@ export function escalate(base: SeverityId, reportCount: number): SeverityId {
   return base;
 }
 
+/**
+ * أثر انضمام بلاغ جديد على المشكلة: درجة الخطورة بعد التصعيد، وسجل الإجراءات.
+ *
+ * المشكلة لا تنزل درجتها ببلاغ أهدأ — تبقى عند أعلى ما بلغته، فبلاغ واحد عن
+ * إغماء لا يُلغيه عشرة بلاغات عن طابور. ودرجة الخطورة ترتفع أيضاً بمجرد التكرار
+ * عبر `escalate`، لأن تكرار الشكوى نفسها دليل اتساع لا يظهر في نص أي بلاغ منها.
+ *
+ * دالة نقية يشترك فيها مسارا التخزين — المحلي والمشترك — فلا يتفرّع المنطق.
+ */
+export function absorbReport(
+  cluster: Cluster,
+  c: Classification,
+  reportCount: number,
+  at: number,
+  isNew: boolean,
+): { severity: SeverityId; timeline: { at: number; text: string }[] } {
+  const base = isNew ? c.severity : maxSeverity(cluster.severity, c.severity);
+  const severity = escalate(base, reportCount);
+  const timeline = [...cluster.timeline];
+
+  if (!isNew && severity !== cluster.severity) {
+    timeline.push({
+      at,
+      text: `رُفعت درجة الخطورة تلقائياً بعد وصول ${reportCount} بلاغات متشابهة`,
+    });
+  }
+
+  return { severity, timeline };
+}
+
 /* ------------------------------ تحليل المواقع ------------------------------ */
 
 /** كثافة كل موقع للخريطة الحرارية (٠ إلى ١) مرجّحة بالخطورة */

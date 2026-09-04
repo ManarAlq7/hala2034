@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# .env.example يُحفَظ في المستودع كنموذج بلا أسرار
+!.env.example

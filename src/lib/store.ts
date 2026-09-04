@@ -1,10 +1,22 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
-import type { ChannelId, Classification, Cluster, Report, SeverityId, SourceId, StatusId } from "./types";
-import { classifyLocal, escalate, findOrCreateCluster } from "./ai";
+import type { ChannelId, Classification, Cluster, Report, SourceId, StatusId } from "./types";
+import { absorbReport, classifyLocal, findOrCreateCluster } from "./ai";
 import { classifyReport } from "./classify";
+import {
+  addNoteInDb,
+  fetchState,
+  isEmpty,
+  resetDb,
+  saveSummaryInDb,
+  seedDb,
+  setStatusInDb,
+  submitToDb,
+  subscribeToDb,
+} from "./db";
 import { needsSummary, summarizeCluster } from "./summarize";
+import { hasSupabase } from "./supabase";
 import { buildSeedInputs } from "./seed";
 
 const STORAGE_KEY = "hala2034:state:v3";
@@ -35,10 +47,6 @@ export interface SubmitResult {
   /** عدد البلاغات المتشابهة التي انضم إليها هذا البلاغ */
   similarCount: number;
 }
-
-const SEV_ORDER: SeverityId[] = ["low", "medium", "high", "critical"];
-const highest = (a: SeverityId, b: SeverityId): SeverityId =>
-  SEV_ORDER.indexOf(a) >= SEV_ORDER.indexOf(b) ? a : b;
 
 const pad = (n: number) => String(n).padStart(4, "0");
 
@@ -85,20 +93,9 @@ export function ingest(
   };
 
   const reportIds = [...found.reportIds, report.id];
-  const baseSeverity = isNew
-    ? classification.severity
-    : highest(found.severity, classification.severity);
+  const { severity, timeline } = absorbReport(found, classification, reportIds.length, at, isNew);
 
-  const timeline = [...found.timeline];
-  const escalated = escalate(baseSeverity, reportIds.length);
-  if (!isNew && escalated !== found.severity) {
-    timeline.push({
-      at,
-      text: `رُفعت درجة الخطورة تلقائياً بعد وصول ${reportIds.length} بلاغات متشابهة`,
-    });
-  }
-
-  const cluster: Cluster = { ...found, reportIds, lastSeen: at, severity: escalated, timeline };
+  const cluster: Cluster = { ...found, reportIds, lastSeen: at, severity, timeline };
 
   const clusters = isNew
     ? [cluster, ...state.clusters]
@@ -163,6 +160,17 @@ function buildInitialState(now: number): AppState {
 
 /* -------------------------------------------------------------------------- */
 /*  مخزن الحالة — خارج React، تشترك فيه كل المكوّنات                           */
+/*                                                                             */
+/*  للمخزن مسلكان للحفظ يُختاران مرة واحدة عند الإقلاع:                          */
+/*                                                                             */
+/*    • قاعدة بيانات مشتركة (Supabase) حين تتوفّر بياناتها: البلاغ المرسل من     */
+/*      جهاز يظهر على لوحة جهاز آخر لحظياً — وهو ما يجعل النظام قابلاً للتشغيل    */
+/*      فعلاً في مركز عمليات.                                                    */
+/*    • تخزين المتصفح المحلي حين لا تتوفّر: من ينسخ المستودع يشغّله فوراً بلا      */
+/*      إعداد، لكن لكل متصفح نسخته الخاصة.                                       */
+/*                                                                             */
+/*  المسلكان يشتركان في منطق التصنيف والتجميع والتصعيد كاملاً؛ الفرق في مكان     */
+/*  الحفظ لا في السلوك.                                                          */
 /* -------------------------------------------------------------------------- */
 
 const EMPTY: AppState = { ready: false, reports: [], clusters: [], counter: 0, summarizing: [] };
@@ -176,6 +184,7 @@ function emit() {
 }
 
 function persist(state: AppState) {
+  if (hasSupabase) return;
   try {
     // `summarizing` حالة عابرة: حفظها يعني ظهور مؤشر تحميل معلّق بعد إعادة التحميل
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, summarizing: [] }));
@@ -190,11 +199,32 @@ function setState(next: AppState, save = true) {
   emit();
 }
 
-/** تُستدعى مرة واحدة من المتصفح: تُحمّل الحالة المحفوظة أو تبني البيانات التجريبية */
-function ensureInit() {
-  if (initialized || typeof window === "undefined") return;
-  initialized = true;
+/* ------------------------- الإقلاع: اختيار المسلك ------------------------- */
 
+/** إعادة تحميل الحالة من قاعدة البيانات — تُستدعى بعد كل تغيير يصل من أي جهاز */
+async function refreshFromDb() {
+  const { reports, clusters } = await fetchState();
+  setState({ ...current, ready: true, reports, clusters }, false);
+}
+
+async function initFromDb() {
+  // البذر يقع مرة واحدة: أول زائر يجد القاعدة فارغة هو من يبنيها
+  if (await isEmpty()) {
+    const seed = buildInitialState(Date.now());
+    await seedDb({ reports: seed.reports, clusters: seed.clusters });
+  }
+
+  await refreshFromDb();
+
+  // من هنا فصاعداً لا يقود المتصفحُ الحالةَ: كل تغيير يصل من قاعدة البيانات
+  subscribeToDb(() => {
+    void refreshFromDb().catch(() => {
+      // تعذّرت إعادة التحميل — تبقى آخر حالة معروفة معروضة حتى الحدث التالي
+    });
+  });
+}
+
+function initFromLocalStorage() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
@@ -210,6 +240,23 @@ function ensureInit() {
   setState(buildInitialState(Date.now()));
 }
 
+/** تُستدعى مرة واحدة من المتصفح */
+function ensureInit() {
+  if (initialized || typeof window === "undefined") return;
+  initialized = true;
+
+  if (!hasSupabase) {
+    initFromLocalStorage();
+    return;
+  }
+
+  void initFromDb().catch((err) => {
+    // القاعدة غير متاحة: العرض يواصل عمله محلياً بدل أن يبقى فارغاً
+    console.error("[store] تعذّر الوصول لقاعدة البيانات المشتركة، تم الارتداد للتخزين المحلي:", err);
+    initFromLocalStorage();
+  });
+}
+
 const subscribe = (cb: () => void) => {
   listeners.add(cb);
   return () => listeners.delete(cb);
@@ -222,17 +269,86 @@ const getServerSnapshot = () => EMPTY;
 
 /**
  * استقبال بلاغ جديد: يصنَّف بالنموذج اللغوي إن توفّر، وإلا بالمحرك المحلي،
- * ثم يُضم إلى الحالة.
+ * ثم يُحفظ في قاعدة البيانات المشتركة أو محلياً.
  */
 export async function submitReport(input: SubmitInput): Promise<SubmitResult> {
   const classification = await classifyReport(input.text, input.zoneId);
-  const { state, result } = ingest(current, input, classification);
-  setState(state);
+
+  let result: SubmitResult;
+
+  if (hasSupabase) {
+    const saved = await submitToDb(input, classification);
+    result = { ...saved, classification };
+    // الحالة المعروضة تأتي من القاعدة، فيرى المرسِل ما يراه بقية الأجهزة
+    await refreshFromDb();
+  } else {
+    const next = ingest(current, input, classification);
+    setState(next.state);
+    result = next.result;
+  }
 
   // التلخيص لا يوقف تسليم النتيجة للمشجّع: يجري في الخلفية ويصل للوحة حين يجهز
-  if (needsSummary(result.cluster)) void generateSummary(result.cluster.id);
+  const cluster = current.clusters.find((c) => c.id === result.cluster.id) ?? result.cluster;
+  if (needsSummary(cluster)) void generateSummary(cluster.id);
 
   return result;
+}
+
+export async function setClusterStatus(clusterId: string, status: StatusId) {
+  const now = Date.now();
+  const note =
+    status === "resolved" ? "تم إغلاق المشكلة" : status === "in_progress" ? "بدأت المعالجة" : "أُعيد فتح المشكلة";
+
+  if (hasSupabase) {
+    await setStatusInDb(clusterId, status, note);
+    await refreshFromDb();
+    return;
+  }
+
+  setState({
+    ...current,
+    clusters: current.clusters.map((c) => {
+      if (c.id !== clusterId) return c;
+      return {
+        ...c,
+        status,
+        firstActionAt: status === "new" ? c.firstActionAt : (c.firstActionAt ?? now),
+        resolvedAt: status === "resolved" ? now : undefined,
+        timeline: [...c.timeline, { at: now, text: note }],
+      };
+    }),
+  });
+}
+
+export async function addClusterNote(clusterId: string, text: string) {
+  const now = Date.now();
+
+  if (hasSupabase) {
+    await addNoteInDb(clusterId, text);
+    await refreshFromDb();
+    return;
+  }
+
+  setState({
+    ...current,
+    clusters: current.clusters.map((c) =>
+      c.id === clusterId
+        ? { ...c, firstActionAt: c.firstActionAt ?? now, timeline: [...c.timeline, { at: now, text }] }
+        : c,
+    ),
+  });
+}
+
+export async function resetState() {
+  const fresh = buildInitialState(Date.now());
+
+  if (hasSupabase) {
+    await resetDb({ reports: fresh.reports, clusters: fresh.clusters });
+    await refreshFromDb();
+    return;
+  }
+
+  setState(fresh);
 }
 
 /* -------------------------------- التلخيص -------------------------------- */
@@ -243,7 +359,7 @@ const inFlight = new Set<string>();
 const withSummarizing = (state: AppState, ids: string[]): AppState => ({ ...state, summarizing: ids });
 
 /**
- * توليد ملخّص لمشكلة وتخزينه.
+ * توليد ملخّص لمشكلة وحفظه.
  *
  * يُستدعى تلقائياً حين يتراكم عدد كافٍ من البلاغات، ويدوياً من لوحة التفاصيل.
  * عند الفشل لا يتغيّر شيء — تبقى المشكلة بعنوانها القالبي دون ملخّص مزيّف.
@@ -275,55 +391,30 @@ export async function generateSummary(clusterId: string): Promise<void> {
       return;
     }
 
+    if (hasSupabase) {
+      await saveSummaryInDb(clusterId, summary);
+      setState(withSummarizing(current, remaining), false);
+      await refreshFromDb();
+      return;
+    }
+
     setState({
       ...current,
       summarizing: remaining,
       clusters: current.clusters.map((c) => (c.id === clusterId ? { ...c, summary } : c)),
     });
+  } catch {
+    setState(withSummarizing(current, current.summarizing.filter((id) => id !== clusterId)), false);
   } finally {
     inFlight.delete(clusterId);
   }
 }
 
-export function setClusterStatus(clusterId: string, status: StatusId) {
-  const now = Date.now();
-  const note =
-    status === "resolved" ? "تم إغلاق المشكلة" : status === "in_progress" ? "بدأت المعالجة" : "أُعيد فتح المشكلة";
-
-  setState({
-    ...current,
-    clusters: current.clusters.map((c) => {
-      if (c.id !== clusterId) return c;
-      return {
-        ...c,
-        status,
-        firstActionAt: status === "new" ? c.firstActionAt : (c.firstActionAt ?? now),
-        resolvedAt: status === "resolved" ? now : undefined,
-        timeline: [...c.timeline, { at: now, text: note }],
-      };
-    }),
-  });
-}
-
-export function addClusterNote(clusterId: string, text: string) {
-  const now = Date.now();
-  setState({
-    ...current,
-    clusters: current.clusters.map((c) =>
-      c.id === clusterId
-        ? { ...c, firstActionAt: c.firstActionAt ?? now, timeline: [...c.timeline, { at: now, text }] }
-        : c,
-    ),
-  });
-}
-
-export function resetState() {
-  setState(buildInitialState(Date.now()));
-}
-
 /* ---------------------------------- الخطّاف ---------------------------------- */
 
 export interface UseApp extends AppState {
+  /** هل الحالة مشتركة بين الأجهزة أم محفوظة في هذا المتصفح وحده؟ */
+  shared: boolean;
   submit: typeof submitReport;
   setStatus: typeof setClusterStatus;
   addNote: typeof addClusterNote;
@@ -340,6 +431,7 @@ export function useApp(): UseApp {
 
   return {
     ...state,
+    shared: hasSupabase,
     submit: submitReport,
     setStatus: setClusterStatus,
     addNote: addClusterNote,
