@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------- */
+/*  الهوية البصرية — هلا 2034                                       */
+/* ---------------------------------------------------------------- */
+:root {
+  --brand-900: #083d28;
+  --brand-800: #0b4d33;
+  --brand-700: #0e5a3c;
+  --brand-600: #146c49;
+  --brand-500: #1f8558;
+  --brand-100: #e3efe9;
+  --brand-50: #f2f8f5;
+  --gold-600: #a8863f;
+  --gold-500: #c3a15a;
+  --gold-200: #ecdfc2;
+
+  --background: #f4f7f5;
+  --surface: #ffffff;
+  --ink: #14251d;
+  --ink-muted: #5d7268;
+  --hairline: #e2eae5;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-hairline: var(--hairline);
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+  --color-brand-800: var(--brand-800);
+  --color-brand-900: var(--brand-900);
+  --color-gold-200: var(--gold-200);
+  --color-gold-500: var(--gold-500);
+  --color-gold-600: var(--gold-600);
+  --font-sans: var(--font-arabic), "Segoe UI", Tahoma, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--ink);
+  font-family: var(--font-arabic), "Segoe UI", Tahoma, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* الأرقام دائماً من اليسار لليمين داخل النص العربي */
+.nums {
+  direction: ltr;
+  unicode-bidi: isolate;
+  display: inline-block;
+}
+
+/* خلفية الترويسة المموّجة المستوحاة من هوية المشروع */
+.brand-gradient {
+  background:
+    radial-gradient(1200px 380px at 82% -140px, rgba(195, 161, 90, 0.28), transparent 62%),
+    linear-gradient(135deg, var(--brand-900) 0%, var(--brand-700) 52%, var(--brand-600) 100%);
+}
+
+.brand-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 1rem;
+  box-shadow: 0 1px 2px rgba(20, 37, 29, 0.04);
+}
+
+/* شريط تمرير أنعم داخل القوائم الطويلة */
+.thin-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: #cfdcd5;
+  border-radius: 99px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.85); opacity: 0.55; }
+  70% { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+.pulse-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: pulse-ring 2.2s cubic-bezier(0.25, 0.6, 0.35, 1) infinite;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rise { animation: rise 0.35s ease-out both; }
