@@ -61,6 +61,14 @@ export const userRole = (user: OpsUser, locale: Locale) =>
 export interface UseSession {
   status: SessionStatus;
   user: OpsUser | null;
+  /**
+   * هل صاحب الجلسة عضو في فريق العمليات؟
+   *
+   * منذ أن صار للجمهور حسابات، لم يعد وجود جلسة دليلاً على الصلاحية. الجواب
+   * يأتي من قاعدة البيانات لا من بيانات المستخدم: ما يكتبه المستخدم عن نفسه
+   * لا يمنحه صلاحية.
+   */
+  isOps: boolean;
 }
 
 /**
@@ -73,7 +81,9 @@ export function useSession(): UseSession {
   // بلا خدمة دخول مهيّأة لا يوجد ما يُنتظر، فالحالة الابتدائية «غير مسجَّل»
   // مباشرةً بدل ومضة انتظار لا تنتهي
   const [state, setState] = useState<UseSession>(() =>
-    hasSupabase ? { status: "loading", user: null } : { status: "anonymous", user: null },
+    hasSupabase
+      ? { status: "loading", user: null, isOps: false }
+      : { status: "anonymous", user: null, isOps: false },
   );
 
   useEffect(() => {
@@ -82,13 +92,15 @@ export function useSession(): UseSession {
     const db = supabase();
     let alive = true;
 
-    const apply = (session: Session | null) => {
+    const apply = async (session: Session | null) => {
       if (!alive) return;
-      setState(
-        session
-          ? { status: "authenticated", user: toUser(session) }
-          : { status: "anonymous", user: null },
-      );
+      if (!session) {
+        setState({ status: "anonymous", user: null, isOps: false });
+        return;
+      }
+      const { data } = await db.rpc("is_ops");
+      if (!alive) return;
+      setState({ status: "authenticated", user: toUser(session), isOps: data === true });
     };
 
     void db.auth.getSession().then(({ data }) => apply(data.session));

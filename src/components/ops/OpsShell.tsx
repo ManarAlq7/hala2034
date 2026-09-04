@@ -35,19 +35,22 @@ const NAV: { href: string; key: StringKey; Icon: (p: { className?: string }) => 
  * ترفض كل كتابة تشغيلية بلا رمز جلسة صالح. لذلك لا يكفي تجاوز هذه الشاشة.
  */
 export default function OpsShell({ children }: { children: React.ReactNode }) {
-  const { status, user } = useSession();
+  const { status, user, isOps } = useSession();
   const { t, locale, toggle, isRtl } = useLocale();
   const { clusters, shared } = useApp();
   const router = useRouter();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // إعادة التوجيه بعد اكتمال القراءة فقط — لا يُطرَد مسجَّلٌ لأن الجلسة لم تصل بعد
+  // إعادة التوجيه بعد اكتمال القراءة فقط — لا يُطرَد مسجَّلٌ لأن الجلسة لم تصل بعد.
+  // ومن سجّل دخوله كمشجّع ليس مشغّلاً: يعود إلى حسابه لا إلى شاشة الدخول، فليس
+  // به نقص جلسة بل نقص صلاحية.
   useEffect(() => {
     if (status === "anonymous") router.replace("/ops/login");
-  }, [status, router]);
+    else if (status === "authenticated" && !isOps) router.replace("/account");
+  }, [status, isOps, router]);
 
-  if (status !== "authenticated" || !user) {
+  if (status !== "authenticated" || !user || !isOps) {
     return (
       <div className="grid min-h-screen place-items-center px-6 text-sm text-text-muted">
         {status === "loading" ? t("ops.guardChecking") : t("ops.guardRedirect")}

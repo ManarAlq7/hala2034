@@ -218,9 +218,16 @@ export async function submitToDb(
     reportCount = (count ?? 0) + 1;
   }
 
+  /*
+   * البلاغ يُوسم بصاحبه إن كان مسجّلاً كي يجده في حسابه، ويبقى مجهولاً إن لم
+   * يكن. سياسة الإدراج ترفض أي معرّف غير معرّف صاحب الجلسة، فالوسم لا يُنتحل.
+   */
+  const { data: auth } = await db.auth.getUser();
+
   const { data: reportRow, error: reportErr } = await db
     .from("reports")
     .insert({
+      user_id: auth.user?.id ?? null,
       cluster_id: clusterId,
       text: input.text,
       text_ar: classification.textAr ?? null,
@@ -264,20 +271,26 @@ async function readCluster(id: string): Promise<ClusterRow> {
   return data as ClusterRow;
 }
 
+/*
+ * كتابات فريق العمليات تمرّ بدوالّ لا بأعمدة.
+ *
+ * منذ أن فُتح تسجيل الدخول للجمهور لم يعد «مسجَّل دخول» يعني «مشغّل». وحدود
+ * الأعمدة في قاعدة البيانات لا تعرف من صاحب الجلسة، فنُقلت هذه الكتابات إلى
+ * دوالّ تسأل عن العضوية أوّلاً وترفض بـ 42501 من ليس عضواً. المشجّع المسجَّل
+ * لا يملك على المشكلات إلا الأعمدة الثلاثة التي يملكها الزائر.
+ */
 export async function setStatusInDb(clusterId: string, status: StatusId, entry: TimelineEntry) {
   const now = entry.at;
   const row = await readCluster(clusterId);
 
-  const { error } = await supabase()
-    .from("clusters")
-    .update({
-      status,
-      // زمن أول إجراء يُسجَّل مرة واحدة: إعادة الفتح لا تُعيد ضبط قياس الاستجابة
-      first_action_at: status === "new" ? row.first_action_at : (row.first_action_at ?? iso(now)),
-      resolved_at: status === "resolved" ? iso(now) : null,
-      timeline: [...(row.timeline ?? []), entry],
-    })
-    .eq("id", clusterId);
+  const { error } = await supabase().rpc("ops_set_status", {
+    p_cluster_id: clusterId,
+    p_status: status,
+    // زمن أول إجراء يُسجَّل مرة واحدة: إعادة الفتح لا تُعيد ضبط قياس الاستجابة
+    p_first_action: status === "new" ? row.first_action_at : (row.first_action_at ?? iso(now)),
+    p_resolved: status === "resolved" ? iso(now) : null,
+    p_timeline: [...(row.timeline ?? []), entry],
+  });
   if (error) throw error;
 }
 
@@ -285,18 +298,19 @@ export async function addNoteInDb(clusterId: string, text: string) {
   const now = Date.now();
   const row = await readCluster(clusterId);
 
-  const { error } = await supabase()
-    .from("clusters")
-    .update({
-      first_action_at: row.first_action_at ?? iso(now),
-      timeline: [...(row.timeline ?? []), { at: now, text }],
-    })
-    .eq("id", clusterId);
+  const { error } = await supabase().rpc("ops_add_note", {
+    p_cluster_id: clusterId,
+    p_first_action: row.first_action_at ?? iso(now),
+    p_timeline: [...(row.timeline ?? []), { at: now, text }],
+  });
   if (error) throw error;
 }
 
 export async function saveSummaryInDb(clusterId: string, summary: ClusterSummary) {
-  const { error } = await supabase().from("clusters").update({ summary }).eq("id", clusterId);
+  const { error } = await supabase().rpc("ops_save_summary", {
+    p_cluster_id: clusterId,
+    p_summary: summary,
+  });
   if (error) throw error;
 }
 

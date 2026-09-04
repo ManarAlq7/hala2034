@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { IconClose, IconMenu } from "@/components/ops/Icons";
+import { useAccount } from "@/lib/account";
 import { useLocale } from "@/lib/i18n";
 import type { StringKey } from "@/lib/strings";
 
@@ -23,6 +24,7 @@ const NAV: { href: string; key: StringKey }[] = [
  */
 export default function FanShell({ children }: { children: React.ReactNode }) {
   const { t, toggle, isRtl } = useLocale();
+  const { status } = useAccount();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -62,6 +64,13 @@ export default function FanShell({ children }: { children: React.ReactNode }) {
           <nav className="hidden items-center gap-0.5 md:flex">{links}</nav>
 
           <div className="flex items-center gap-1.5">
+            {/* الحساب اختياري، فالرابط يقول «تسجيل الدخول» لا يفرضه */}
+            <Link
+              href={status === "signedIn" ? "/account" : "/account/signin"}
+              className="btn btn-ghost btn-sm"
+            >
+              {status === "signedIn" ? t("nav.account") : t("nav.signIn")}
+            </Link>
             <button onClick={toggle} className="btn btn-ghost btn-sm" aria-label={t("header.switchLangAria")}>
               {t("header.switchLang")}
             </button>
