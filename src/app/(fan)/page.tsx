@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import StadiumArt, { sceneFor } from "@/components/fan/StadiumArt";
+import StadiumGate from "@/components/fan/StadiumGate";
 import {
   matchAway,
   matchHome,
@@ -42,6 +44,9 @@ export default function LandingPage() {
 
   return (
     <div>
+      {/* البوابة تسبق كل شيء، وتنزاح عن الصفحة بعد أوّل تفاعل */}
+      <StadiumGate venues={venues} />
+
       {/* ------------------------------- الواجهة ------------------------------- */}
       <section className="aura grid-lines border-b border-line">
         <div className="mx-auto max-w-5xl px-5 py-14 sm:py-20">
@@ -155,15 +160,25 @@ export default function LandingPage() {
           <section>
             <SectionHead title={t("land.venues")} />
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {venues.map((v) => (
-                <li key={v.id} className="card p-4">
-                  <p className="text-[11px] uppercase tracking-[0.12em] text-brand">
-                    {venueCity(v, locale)}
-                  </p>
-                  <p className="mt-1.5 font-bold leading-snug text-text">{venueName(v, locale)}</p>
-                  <p className="nums mt-2 text-[11px] text-text-dim">
-                    {v.capacity.toLocaleString("en-US")} · {t("land.capacityApprox")}
-                  </p>
+              {venues.map((v, i) => (
+                <li key={v.id} className="card overflow-hidden">
+                  {/* الرسم نفسه الذي ظهر في البوابة — كي تُعرف الملاعب حين تعود */}
+                  <div className="aspect-[16/8] overflow-hidden border-b border-line bg-surface-3">
+                    <StadiumArt
+                      scene={sceneFor(v.id, i)}
+                      uid={`card-${v.id}`}
+                      className="h-full w-full"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <p className="text-[11px] uppercase tracking-[0.12em] text-brand">
+                      {venueCity(v, locale)}
+                    </p>
+                    <p className="mt-1.5 font-bold leading-snug text-text">{venueName(v, locale)}</p>
+                    <p className="nums mt-2 text-[11px] text-text-dim">
+                      {v.capacity.toLocaleString("en-US")} · {t("land.capacityApprox")}
+                    </p>
+                  </div>
                 </li>
               ))}
             </ul>

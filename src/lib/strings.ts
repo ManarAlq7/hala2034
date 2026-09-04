@@ -379,6 +379,14 @@ export const AR = {
   "fz.person": "شخص",
   "fz.empty": "لا توجد مناطق معروضة.",
 
+  /* ------------------------------ بوابة الملاعب ------------------------------ */
+  "gate.title": "الملاعب المستضيفة",
+  "gate.kicker": "ثمانية ملاعب · خمس مدن · بطولة واحدة",
+  "gate.eyebrow": "ملاعب البطولة",
+  "gate.capacity": "سعة {n} مقعد",
+  "gate.enter": "ادخل",
+  "gate.hint": "اضغط أي مفتاح للدخول",
+
   "common.loading": "جارٍ التحميل…",
 } as const;
 
@@ -737,6 +745,13 @@ export const EN: Record<StringKey, string> = {
   "fz.capacity": "Holds",
   "fz.person": "people",
   "fz.empty": "No fan zones to show.",
+
+  "gate.title": "Host stadiums",
+  "gate.kicker": "Eight stadiums · Five cities · One tournament",
+  "gate.eyebrow": "Tournament venues",
+  "gate.capacity": "{n} seats",
+  "gate.enter": "Enter",
+  "gate.hint": "Press any key to enter",
 
   "common.loading": "Loading…",
 };
