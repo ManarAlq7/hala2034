@@ -4,15 +4,18 @@ import { useEffect, useSyncExternalStore } from "react";
 import type { ChannelId, Classification, Cluster, Report, SeverityId, SourceId, StatusId } from "./types";
 import { classifyLocal, escalate, findOrCreateCluster } from "./ai";
 import { classifyReport } from "./classify";
+import { needsSummary, summarizeCluster } from "./summarize";
 import { buildSeedInputs } from "./seed";
 
-const STORAGE_KEY = "hala2034:state:v2";
+const STORAGE_KEY = "hala2034:state:v3";
 
 export interface AppState {
   ready: boolean;
   reports: Report[];
   clusters: Cluster[];
   counter: number;
+  /** المشكلات التي يجري تلخيصها الآن — حالة عابرة لا تُحفظ */
+  summarizing: string[];
 }
 
 export interface SubmitInput {
@@ -65,6 +68,8 @@ export function ingest(
   const report: Report = {
     id: `R-${pad(counter)}`,
     text: input.text,
+    textAr: classification.textAr,
+    textEn: classification.textEn,
     subtype: classification.subtype,
     lang: classification.lang,
     channel: input.channel,
@@ -107,7 +112,7 @@ export function ingest(
 
 /** يبني حالة تجريبية كاملة بتمرير البلاغات التجريبية على نفس مسار المعالجة */
 function buildInitialState(now: number): AppState {
-  let state: AppState = { ready: true, reports: [], clusters: [], counter: 0 };
+  let state: AppState = { ready: true, reports: [], clusters: [], counter: 0, summarizing: [] };
 
   for (const s of buildSeedInputs()) {
     const at = now - s.minutesAgo * 60 * 1000;
@@ -160,7 +165,7 @@ function buildInitialState(now: number): AppState {
 /*  مخزن الحالة — خارج React، تشترك فيه كل المكوّنات                           */
 /* -------------------------------------------------------------------------- */
 
-const EMPTY: AppState = { ready: false, reports: [], clusters: [], counter: 0 };
+const EMPTY: AppState = { ready: false, reports: [], clusters: [], counter: 0, summarizing: [] };
 
 let current: AppState = EMPTY;
 let initialized = false;
@@ -172,7 +177,8 @@ function emit() {
 
 function persist(state: AppState) {
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    // `summarizing` حالة عابرة: حفظها يعني ظهور مؤشر تحميل معلّق بعد إعادة التحميل
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, summarizing: [] }));
   } catch {
     // مساحة التخزين ممتلئة — النموذج يواصل العمل من الذاكرة
   }
@@ -194,7 +200,7 @@ function ensureInit() {
     if (raw) {
       const parsed = JSON.parse(raw) as AppState;
       if (parsed?.reports?.length) {
-        setState({ ...parsed, ready: true }, false);
+        setState({ ...parsed, ready: true, summarizing: [] }, false);
         return;
       }
     }
@@ -222,7 +228,61 @@ export async function submitReport(input: SubmitInput): Promise<SubmitResult> {
   const classification = await classifyReport(input.text, input.zoneId);
   const { state, result } = ingest(current, input, classification);
   setState(state);
+
+  // التلخيص لا يوقف تسليم النتيجة للمشجّع: يجري في الخلفية ويصل للوحة حين يجهز
+  if (needsSummary(result.cluster)) void generateSummary(result.cluster.id);
+
   return result;
+}
+
+/* -------------------------------- التلخيص -------------------------------- */
+
+/** المشكلات التي لها طلب تلخيص معلّق — يمنع إطلاق طلبين لنفس المشكلة */
+const inFlight = new Set<string>();
+
+const withSummarizing = (state: AppState, ids: string[]): AppState => ({ ...state, summarizing: ids });
+
+/**
+ * توليد ملخّص لمشكلة وتخزينه.
+ *
+ * يُستدعى تلقائياً حين يتراكم عدد كافٍ من البلاغات، ويدوياً من لوحة التفاصيل.
+ * عند الفشل لا يتغيّر شيء — تبقى المشكلة بعنوانها القالبي دون ملخّص مزيّف.
+ */
+export async function generateSummary(clusterId: string): Promise<void> {
+  if (inFlight.has(clusterId)) return;
+
+  const cluster = current.clusters.find((c) => c.id === clusterId);
+  if (!cluster) return;
+
+  const byId = new Map(current.reports.map((r) => [r.id, r]));
+  const texts = cluster.reportIds
+    .map((id) => byId.get(id))
+    .filter((r): r is Report => Boolean(r))
+    .sort((a, b) => a.createdAt - b.createdAt)
+    .map((r) => r.text);
+
+  if (texts.length === 0) return;
+
+  inFlight.add(clusterId);
+  setState(withSummarizing(current, [...current.summarizing, clusterId]), false);
+
+  try {
+    const summary = await summarizeCluster(cluster, texts);
+    const remaining = current.summarizing.filter((id) => id !== clusterId);
+
+    if (!summary) {
+      setState(withSummarizing(current, remaining), false);
+      return;
+    }
+
+    setState({
+      ...current,
+      summarizing: remaining,
+      clusters: current.clusters.map((c) => (c.id === clusterId ? { ...c, summary } : c)),
+    });
+  } finally {
+    inFlight.delete(clusterId);
+  }
 }
 
 export function setClusterStatus(clusterId: string, status: StatusId) {
@@ -267,6 +327,7 @@ export interface UseApp extends AppState {
   submit: typeof submitReport;
   setStatus: typeof setClusterStatus;
   addNote: typeof addClusterNote;
+  summarize: typeof generateSummary;
   reset: typeof resetState;
 }
 
@@ -282,6 +343,7 @@ export function useApp(): UseApp {
     submit: submitReport,
     setStatus: setClusterStatus,
     addNote: addClusterNote,
+    summarize: generateSummary,
     reset: resetState,
   };
 }

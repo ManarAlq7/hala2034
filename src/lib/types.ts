@@ -18,11 +18,14 @@ export type SourceId = "text" | "voice";
 
 export interface Report {
   id: string;
+  /** النص الأصلي كما ورد — يبقى مرجعاً لا يتغيّر */
   text: string;
+  /** ترجمة النص للعربية (المسار السحابي) */
+  textAr?: string;
+  /** ترجمة النص للإنجليزية (المسار السحابي) */
+  textEn?: string;
   /** النوع الفرعي المستقل عن اللغة، مثل facilities:elevator */
   subtype: string;
-  /** النص الأصلي كما ورد إن كان بلغة غير العربية */
-  originalText?: string;
   lang: string;
   channel: ChannelId;
   source: SourceId;
@@ -36,8 +39,28 @@ export interface Report {
   reporterName?: string;
 }
 
+/**
+ * ملخّص المشكلة المولَّد من مجموع بلاغاتها.
+ *
+ * `basedOn` هو عدد البلاغات التي استُخلص منها الملخّص. مقارنته بعدد البلاغات
+ * الحالي هي ما يكشف أن الملخّص تقادم ويحتاج تحديثاً — بلا هذا الحقل لا سبيل
+ * للتمييز بين ملخّص يصف المشكلة كاملةً وآخر يصف أول بلاغين منها فقط.
+ */
+export interface ClusterSummary {
+  titleAr: string;
+  titleEn: string;
+  summaryAr: string;
+  summaryEn: string;
+  /** الإجراء المقترح على فريق العمليات */
+  actionAr: string;
+  actionEn: string;
+  basedOn: number;
+  at: number;
+}
+
 export interface Cluster {
   id: string;
+  /** عنوان قالبي من النوع والموقع — يُستخدم ما لم يوجد ملخّص مولَّد */
   title: string;
   /** النوع الفرعي الذي تُجمَّع البلاغات عليه */
   subtype: string;
@@ -55,6 +78,8 @@ export interface Cluster {
   resolvedAt?: number;
   /** سجل الإجراءات المتخذة */
   timeline: { at: number; text: string }[];
+  /** الملخّص المولَّد بنموذج لغوي — يغيب حتى يُستدعى بنجاح */
+  summary?: ClusterSummary;
 }
 
 export interface Classification {
@@ -66,6 +91,10 @@ export interface Classification {
   keywords: string[];
   confidence: number;
   lang: string;
+  /** ترجمة نص البلاغ للعربية — المسار السحابي فقط */
+  textAr?: string;
+  /** ترجمة نص البلاغ للإنجليزية — المسار السحابي فقط */
+  textEn?: string;
   /** أي محرك أنتج هذا التصنيف */
   source: "local" | "claude";
 }

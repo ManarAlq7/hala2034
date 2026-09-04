@@ -23,6 +23,8 @@ const ClassificationSchema = z.object({
   keywords: z.array(z.string()),
   confidence: z.number(),
   lang: z.string(),
+  textAr: z.string(),
+  textEn: z.string(),
 });
 
 const SUBTYPE_CATALOG = SUBTYPES.map((s) => `- ${s.id} — ${s.label}`).join("\n");
@@ -44,6 +46,11 @@ ${ZONE_CATALOG}
 - keywords: من ١ إلى ٤ كلمات أو عبارات قصيرة منقولة حرفياً من نص البلاغ الأصلي بلغته.
 - lang: رمز ISO من حرفين للغة البلاغ (ar, en, es, fr, ...).
 - confidence: رقم بين 0 و 1 يعبّر عن ثقتك في التصنيف.
+- textAr: نص البلاغ بالعربية. إن كان البلاغ عربياً أصلاً فانقله كما هو دون تغيير.
+- textEn: نص البلاغ بالإنجليزية. إن كان البلاغ إنجليزياً أصلاً فانقله كما هو دون تغيير.
+
+في الترجمة: انقل ما قاله المشجّع فقط — لا تلخّص، ولا تضف تفسيراً، ولا تلطّف
+شكوى حادّة. زمن الاستجابة يُبنى على هذا النص، فالمبالغة والتخفيف كلاهما ضار.
 
 أخرج التصنيف فقط دون أي شرح.`;
 
@@ -110,6 +117,8 @@ export async function POST(req: Request) {
       keywords: parsed.keywords.slice(0, 4),
       confidence: Math.min(1, Math.max(0, parsed.confidence)),
       lang: parsed.lang.slice(0, 5),
+      textAr: parsed.textAr.trim() || undefined,
+      textEn: parsed.textEn.trim() || undefined,
       source: "claude",
     };
 
