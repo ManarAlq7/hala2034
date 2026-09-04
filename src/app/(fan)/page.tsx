@@ -1,211 +1,299 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import VoiceInput from "@/components/VoiceInput";
-import { ZONES, categoryOwner, zoneLabel, zoneVenue } from "@/lib/taxonomy";
-import { langLabel, subtypeLabel } from "@/lib/ai";
+import { useMemo } from "react";
+import {
+  matchAway,
+  matchHome,
+  matchStage,
+  remaining,
+  useCatalog,
+  venueCity,
+  venueName,
+  zoneCity,
+  zoneName,
+  type Match,
+  type Venue,
+} from "@/lib/catalog";
+import { useNow } from "@/lib/clock";
+import { countdown, matchDate, matchDateTime } from "@/lib/format";
 import { useLocale } from "@/lib/i18n";
-import { useApp, type SubmitResult } from "@/lib/store";
-import type { SourceId } from "@/lib/types";
 
-/** أمثلة بلغات مختلفة — مُدخلات لا نصوص واجهة، فتبقى كما هي في اللغتين */
-const EXAMPLES = [
-  "الزحمة شديدة جداً عند البوابة B وواقفين من نص ساعة",
-  "The toilets near the concourse are dirty and there is no water",
-  "Hay mucha gente en la puerta B y la cola no avanza",
-];
-
-export default function FanReportPage() {
-  const { ready, submit } = useApp();
+/**
+ * واجهة الحدث.
+ *
+ * ترتيب الصفحة يتبع ما يسأل عنه المشجّع بالترتيب: متى المباراة، أين ألعب،
+ * أين أشاهد مع الناس، وكيف أبلّغ إن حدث شيء. البلاغ آخر القائمة لا أولها —
+ * فأكثر من يفتح الصفحة جاء لحضور مباراة لا للشكوى.
+ */
+export default function LandingPage() {
   const { t, locale } = useLocale();
+  const { venues, matches, tiers, zones, status } = useCatalog();
+  const now = useNow();
 
-  const [mode, setMode] = useState<SourceId>("text");
-  const [text, setText] = useState("");
-  const [zoneId, setZoneId] = useState(ZONES[1].id);
-  const [source, setSource] = useState<SourceId>("text");
-  const [result, setResult] = useState<SubmitResult | null>(null);
-  const [sending, setSending] = useState(false);
+  const venueById = useMemo(() => new Map(venues.map((v) => [v.id, v])), [venues]);
+  const upcoming = useMemo(() => matches.slice(0, 8), [matches]);
+  const cities = useMemo(() => new Set(venues.map((v) => v.cityEn)).size, [venues]);
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const clean = text.trim();
-    if (clean.length < 4 || sending) return;
-
-    setSending(true);
-    try {
-      setResult(await submit({ text: clean, zoneId, channel: "web", source }));
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const reset = () => {
-    setResult(null);
-    setText("");
-    setSource("text");
-    setMode("text");
-  };
-
-  if (result) {
-    return <Confirmation result={result} onAnother={reset} />;
-  }
+  const seatsLeft = useMemo(
+    () => tiers.reduce((total, tier) => total + remaining(tier), 0),
+    [tiers],
+  );
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold leading-snug text-text sm:text-3xl">{t("fan.tagline")}</h1>
-        <p className="mt-2 max-w-xl text-sm leading-relaxed text-text-muted">{t("fan.blurb")}</p>
-      </div>
+    <div>
+      {/* ------------------------------- الواجهة ------------------------------- */}
+      <section className="aura grid-lines border-b border-line">
+        <div className="mx-auto max-w-5xl px-5 py-14 sm:py-20">
+          <span className="chip chip-brand">{t("land.badge")}</span>
+          <h1 className="mt-4 max-w-3xl text-3xl font-bold leading-tight text-text sm:text-5xl">
+            {t("land.title")}
+          </h1>
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-text-muted sm:text-base">
+            {t("land.subtitle")}
+          </p>
 
-      <form onSubmit={onSubmit} className="card space-y-6 p-5 sm:p-6">
-        {/* اختيار طريقة الإدخال */}
-        <div className="inline-flex rounded-xl border border-line bg-surface-2 p-1">
-          {(
-            [
-              { id: "text" as SourceId, label: t("fan.modeText"), icon: "⌨️" },
-              { id: "voice" as SourceId, label: t("fan.modeVoice"), icon: "🎙" },
-            ]
-          ).map((m) => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setMode(m.id)}
-              aria-pressed={mode === m.id}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
-                mode === m.id
-                  ? "bg-brand-wash text-brand"
-                  : "text-text-muted hover:text-text"
-              }`}
-            >
-              <span aria-hidden className="me-1.5">
-                {m.icon}
-              </span>
-              {m.label}
-            </button>
-          ))}
+          <div className="mt-7 flex flex-wrap gap-2.5">
+            <Link href="/tickets" className="btn btn-primary px-5 py-3">
+              {t("land.ctaTickets")}
+            </Link>
+            <Link href="/report" className="btn btn-ghost px-5 py-3">
+              {t("land.ctaReport")}
+            </Link>
+          </div>
+
+          {status === "ready" && (
+            <dl className="mt-9 grid max-w-lg grid-cols-3 gap-4 border-t border-line pt-6">
+              <Stat value={matches.length} label={t("land.upcoming")} />
+              <Stat value={venues.length} label={t("land.venues")} />
+              <Stat value={cities} label={t("land.cities")} />
+            </dl>
+          )}
         </div>
+      </section>
 
-        {mode === "voice" && (
-          <VoiceInput
-            onTranscript={(spoken) => {
-              setText((prev) => (prev ? `${prev} ${spoken}` : spoken));
-              setSource("voice");
-            }}
-          />
+      {/* --------------------------- شريط المباريات --------------------------- */}
+      {upcoming.length > 0 && (
+        <section className="border-b border-line bg-surface py-4">
+          <div className="marquee-hold marquee-mask overflow-hidden">
+            <div className="marquee-track gap-3">
+              {/* التكرار مرّتان هو ما يجعل الدورة متصلة بلا قفزة */}
+              {[0, 1].map((pass) => (
+                <div key={pass} className="flex gap-3 pe-3" aria-hidden={pass === 1}>
+                  {upcoming.map((m) => (
+                    <TickerCard
+                      key={`${pass}-${m.id}`}
+                      match={m}
+                      venue={venueById.get(m.venueId)}
+                      now={now}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <div className="mx-auto max-w-5xl space-y-14 px-5 py-14">
+        {status === "loading" && (
+          <p className="py-10 text-center text-sm text-text-dim">{t("common.loading")}</p>
         )}
 
-        <div>
-          <label htmlFor="text" className="label">
-            {t("report.textLabel")}
-          </label>
-          <textarea
-            id="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            rows={5}
-            placeholder={t("report.placeholder")}
-            className="input resize-y"
-          />
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {EXAMPLES.map((ex) => (
-              <button
-                key={ex}
-                type="button"
-                onClick={() => setText(ex)}
-                className="rounded-full border border-line bg-surface-2 px-2.5 py-1 text-[11px] text-text-dim transition hover:border-line-strong hover:text-text-muted"
-              >
-                {ex.length > 40 ? `${ex.slice(0, 40)}…` : ex}
-              </button>
-            ))}
+        {/* ------------------------------ المباريات ------------------------------ */}
+        {upcoming.length > 0 && (
+          <section>
+            <SectionHead
+              title={t("land.upcoming")}
+              note={t("land.demoData")}
+              action={{ href: "/tickets", label: t("land.viewAll") }}
+            />
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {upcoming.slice(0, 4).map((m) => {
+                const venue = venueById.get(m.venueId);
+                const left = countdown(m.kickoff, now, locale);
+                const started = m.kickoff <= now;
+                return (
+                  <li key={m.id} className="card card-link p-4">
+                    <div className="flex items-center justify-between gap-2 text-[11px] text-text-dim">
+                      <span>
+                        {matchStage(m, locale)}
+                        {m.group ? ` · ${m.group}` : ""}
+                      </span>
+                      <span className="nums">{matchDateTime(m.kickoff, locale)}</span>
+                    </div>
+
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <Side flag={m.homeFlag} name={matchHome(m, locale)} />
+                      <span className="text-xs font-bold text-text-dim">—</span>
+                      <Side flag={m.awayFlag} name={matchAway(m, locale)} align="end" />
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3 text-[11px] text-text-muted">
+                      <span>{venue ? venueName(venue, locale) : ""}</span>
+                      <span className="chip chip-neutral">
+                        {started ? (
+                          t("land.started")
+                        ) : left ? (
+                          <>
+                            {t("land.kickoffIn")} <span className="nums">{left}</span>
+                          </>
+                        ) : (
+                          <span className="nums">{matchDate(m.kickoff, locale)}</span>
+                        )}
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
+
+        {/* ------------------------------- الملاعب ------------------------------- */}
+        {venues.length > 0 && (
+          <section>
+            <SectionHead title={t("land.venues")} />
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {venues.map((v) => (
+                <li key={v.id} className="card p-4">
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-brand">
+                    {venueCity(v, locale)}
+                  </p>
+                  <p className="mt-1.5 font-bold leading-snug text-text">{venueName(v, locale)}</p>
+                  <p className="nums mt-2 text-[11px] text-text-dim">
+                    {v.capacity.toLocaleString("en-US")} · {t("land.capacityApprox")}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* --------------------------- مناطق المشجعين --------------------------- */}
+        {zones.length > 0 && (
+          <section>
+            <SectionHead
+              title={t("land.zones")}
+              action={{ href: "/fan-zones", label: t("land.viewAll") }}
+            />
+            <ul className="grid gap-3 sm:grid-cols-3">
+              {zones.slice(0, 3).map((z) => (
+                <li key={z.id} className="card p-4">
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-brand">
+                    {zoneCity(z, locale)}
+                  </p>
+                  <p className="mt-1.5 font-bold leading-snug text-text">{zoneName(z, locale)}</p>
+                  <p className="nums mt-2 text-[11px] text-text-dim">
+                    {t("fz.opens")} {z.opensAt}–{z.closesAt}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* -------------------------------- البلاغ -------------------------------- */}
+        <section className="card overflow-hidden">
+          <div className="aura p-6 sm:p-8">
+            <h2 className="text-lg font-bold text-text sm:text-xl">{t("land.reportTitle")}</h2>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-text-muted">
+              {t("land.reportBody")}
+            </p>
+            <div className="mt-5 flex flex-wrap gap-2.5">
+              <Link href="/report" className="btn btn-primary">
+                {t("land.ctaReport")}
+              </Link>
+              <Link href="/track" className="btn btn-ghost">
+                {t("nav.track")}
+              </Link>
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div>
-          <label htmlFor="zone" className="label">
-            {t("report.zoneLabel")}
-          </label>
-          <select
-            id="zone"
-            value={zoneId}
-            onChange={(e) => setZoneId(e.target.value)}
-            className="input"
-          >
-            {ZONES.map((z) => (
-              <option key={z.id} value={z.id}>
-                {zoneLabel(z.id, locale)} — {zoneVenue(z.id, locale)}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1.5 text-[11px] text-text-dim">{t("report.zoneHint")}</p>
-        </div>
-
-        <button
-          type="submit"
-          disabled={!ready || sending || text.trim().length < 4}
-          className="btn btn-primary w-full py-3"
-        >
-          {sending ? t("report.sending") : t("report.submit")}
-        </button>
-      </form>
+        {status === "ready" && seatsLeft > 0 && (
+          <p className="text-center text-[11px] text-text-dim">{t("tk.demoNote")}</p>
+        )}
+      </div>
     </div>
   );
 }
 
-/* ------------------------------ شاشة التأكيد ------------------------------ */
+/* ------------------------------- قطع الصفحة ------------------------------- */
 
-function Confirmation({ result, onAnother }: { result: SubmitResult; onAnother: () => void }) {
-  const { report, cluster, classification, isNewCluster, similarCount } = result;
+function Stat({ value, label }: { value: number; label: string }) {
+  return (
+    <div>
+      <dt className="nums text-2xl font-bold text-text">{value}</dt>
+      <dd className="mt-0.5 text-[11px] text-text-dim">{label}</dd>
+    </div>
+  );
+}
+
+function Side({ flag, name, align = "start" }: { flag: string; name: string; align?: "start" | "end" }) {
+  return (
+    <span
+      className={`flex min-w-0 flex-1 items-center gap-2 ${align === "end" ? "flex-row-reverse text-end" : ""}`}
+    >
+      <span aria-hidden className="text-lg">
+        {flag}
+      </span>
+      <span className="truncate text-sm font-bold text-text">{name}</span>
+    </span>
+  );
+}
+
+function SectionHead({
+  title,
+  note,
+  action,
+}: {
+  title: string;
+  note?: string;
+  action?: { href: string; label: string };
+}) {
+  return (
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+      <div className="flex items-center gap-2.5">
+        <h2 className="text-lg font-bold text-text sm:text-xl">{title}</h2>
+        {note && <span className="chip chip-neutral">{note}</span>}
+      </div>
+      {action && (
+        <Link
+          href={action.href}
+          className="text-xs font-semibold text-text-muted transition hover:text-brand"
+        >
+          {action.label} →
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function TickerCard({ match, venue, now }: { match: Match; venue?: Venue; now: number }) {
   const { t, locale } = useLocale();
+  const left = countdown(match.kickoff, now, locale);
+  const started = match.kickoff <= now;
 
   return (
-    <div className="rise mx-auto max-w-3xl px-5 py-10 sm:py-14">
-      <div className="card overflow-hidden">
-        {/* ما يهمّ المشجّع أولاً: وصل، وهذا رقمه */}
-        <div className="border-b border-line bg-brand-wash px-5 py-6 text-center sm:px-8">
-          <span className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full bg-brand-strong text-lg text-on-brand">
-            ✓
-          </span>
-          <h1 className="text-xl font-bold text-text">{t("report.received")}</h1>
-          <p className="mt-3 text-xs uppercase tracking-[0.14em] text-text-dim">
-            {t("report.trackingNo")}
-          </p>
-          <p className="nums mt-1 text-3xl font-bold tracking-tight text-brand">{report.id}</p>
-        </div>
-
-        <div className="space-y-5 p-5 sm:p-8">
-          <p className="text-sm leading-relaxed text-text-muted">
-            {isNewCluster
-              ? t("report.newClusterBody", {
-                  id: cluster.id,
-                  owner: categoryOwner(report.category, locale),
-                })
-              : t("report.joinedClusterBody", {
-                  n: similarCount,
-                  id: cluster.id,
-                  owner: categoryOwner(report.category, locale),
-                })}
-          </p>
-
-          <div>
-            <h2 className="label">{t("report.understood")}</h2>
-            <div className="flex flex-wrap gap-1.5">
-              <span className="chip chip-brand">{subtypeLabel(report.subtype, locale)}</span>
-              <span className="chip chip-neutral">📍 {zoneLabel(report.zoneId, locale)}</span>
-              <span className="chip chip-neutral">🌐 {langLabel(classification.lang, locale)}</span>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <button onClick={onAnother} className="btn btn-ghost flex-1">
-              {t("fan.another")}
-            </button>
-            <Link href="/track" className="btn btn-primary flex-1">
-              {t("fan.trackCta")}
-            </Link>
-          </div>
-        </div>
-      </div>
+    <div className="card-2 w-64 shrink-0 px-4 py-3">
+      <p className="truncate text-[10px] uppercase tracking-[0.12em] text-text-dim">
+        {venue ? venueCity(venue, locale) : ""} · {matchStage(match, locale)}
+      </p>
+      <p className="mt-1.5 flex items-center gap-1.5 text-sm font-bold text-text">
+        <span aria-hidden>{match.homeFlag}</span>
+        <span className="truncate">{matchHome(match, locale)}</span>
+        <span className="text-text-dim">·</span>
+        <span aria-hidden>{match.awayFlag}</span>
+        <span className="truncate">{matchAway(match, locale)}</span>
+      </p>
+      <p className="nums mt-1 text-[11px] text-text-muted">
+        {started
+          ? t("land.started")
+          : left
+            ? `${t("land.kickoffIn")} ${left}`
+            : matchDateTime(match.kickoff, locale)}
+      </p>
     </div>
   );
 }

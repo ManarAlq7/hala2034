@@ -356,3 +356,34 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .rise, .pulse-ring::after { animation: none; }
 }
+
+/* ------------------------------ الشريط المتحرك ------------------------------ */
+
+/*
+ * شريط المباريات: المحتوى مكرّر مرتين والحركة تُزيح النصف، فتبدو الدورة
+ * متصلة بلا قفزة. تتوقف عند المرور بالمؤشر كي يُقرأ ما تحته.
+ */
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-x 48s linear infinite;
+}
+.marquee-hold:hover .marquee-track,
+.marquee-hold:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+
+/* تلاشٍ على الحافتين بدل قطع حادّ */
+.marquee-mask {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
+}

@@ -2,22 +2,49 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { IconClose, IconMenu } from "@/components/ops/Icons";
 import { useLocale } from "@/lib/i18n";
+import type { StringKey } from "@/lib/strings";
+
+const NAV: { href: string; key: StringKey }[] = [
+  { href: "/", key: "nav.home" },
+  { href: "/tickets", key: "nav.tickets" },
+  { href: "/fan-zones", key: "nav.zones" },
+  { href: "/report", key: "nav.report" },
+  { href: "/track", key: "nav.track" },
+];
 
 /**
  * هيكل واجهة الجمهور.
  *
- * ترويسة من سطر واحد: الهوية، وتبديل اللغة، ورابط واحد لفريق العمليات.
- * لا مؤشرات ولا أرقام ولا تنقّل تشغيلي — المشجّع جاء ليقول شيئاً ويمضي.
+ * تنقّل واحد من خمسة روابط، بلا أي مؤشر تشغيلي. رابط فريق العمليات في التذييل
+ * لا في الترويسة: هو مدخل موظّفين، ووجوده بين روابط المشجّع يوحي بأنه وجهة له.
  */
 export default function FanShell({ children }: { children: React.ReactNode }) {
   const { t, toggle, isRtl } = useLocale();
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
+  const links = NAV.map((item) => {
+    const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        data-active={active}
+        onClick={() => setOpen(false)}
+        className="nav-link"
+      >
+        {t(item.key)}
+      </Link>
+    );
+  });
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b border-line">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-5 py-4">
+      <header className="sticky top-0 z-30 border-b border-line bg-bg/90 backdrop-blur">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-5 py-3">
           <Link href="/" className="flex items-center gap-2.5">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-wash text-base ring-1 ring-brand-dim">
               ⚽
@@ -32,23 +59,34 @@ export default function FanShell({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
 
+          <nav className="hidden items-center gap-0.5 md:flex">{links}</nav>
+
           <div className="flex items-center gap-1.5">
-            {pathname !== "/track" && (
-              <Link href="/track" className="btn btn-ghost btn-sm">
-                {t("nav.track")}
-              </Link>
-            )}
             <button onClick={toggle} className="btn btn-ghost btn-sm" aria-label={t("header.switchLangAria")}>
               {t("header.switchLang")}
             </button>
+            <button
+              onClick={() => setOpen((v) => !v)}
+              className="btn btn-ghost btn-sm md:hidden"
+              aria-label={t("ops.menu")}
+              aria-expanded={open}
+            >
+              {open ? <IconClose /> : <IconMenu />}
+            </button>
           </div>
         </div>
+
+        {open && (
+          <nav className="mx-auto flex max-w-5xl flex-col gap-0.5 border-t border-line px-5 py-3 md:hidden">
+            {links}
+          </nav>
+        )}
       </header>
 
       <main className="flex-1">{children}</main>
 
       <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-3 px-5 py-5 text-xs text-text-dim sm:flex-row">
+        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-5 py-5 text-xs text-text-dim sm:flex-row">
           <span>{t("footer.tagline")}</span>
           <Link href="/ops/login" className="font-semibold text-text-muted transition hover:text-brand">
             {t("fan.opsLink")} ↗
