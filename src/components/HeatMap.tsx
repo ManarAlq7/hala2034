@@ -12,18 +12,22 @@ interface Props {
   bare?: boolean;
 }
 
-/** لون النقطة بحسب شدّة الكثافة — نفس سلّم ألوان درجات الخطورة */
+/**
+ * لون النقطة بحسب شدّة الكثافة — نفس سلّم ألوان درجات الخطورة.
+ * الذهبي غائب هنا عمداً: هو لون الهوية والتفاعل، وإقحامه في سلّم الدلالة
+ * يجعل موقعاً هادئاً يبدو كأنه مُبرَز.
+ */
 function heatColor(v: number): string {
   if (v >= 0.75) return "var(--danger)";
   if (v >= 0.5) return "var(--warn)";
   if (v >= 0.28) return "var(--info)";
-  if (v > 0) return "var(--brand)";
+  if (v > 0) return "var(--ok)";
   return "var(--line-strong)";
 }
 
 const LEGEND = [
   { c: "var(--line-strong)", k: "heat.none" },
-  { c: "var(--brand)", k: "heat.low" },
+  { c: "var(--ok)", k: "heat.low" },
   { c: "var(--info)", k: "heat.medium" },
   { c: "var(--warn)", k: "heat.high" },
   { c: "var(--danger)", k: "heat.critical" },
@@ -73,12 +77,12 @@ export default function HeatMap({ heat, counts, selected, onSelect, bare = false
               aria-pressed={isSel}
             >
               <span
-                className="relative grid place-items-center rounded-full text-[11px] font-bold text-[#04120c] transition group-hover:scale-110"
+                className="relative grid place-items-center rounded-full text-[11px] font-bold text-on-brand transition group-hover:scale-110"
                 style={{
                   width: size,
                   height: size,
                   background: color,
-                  boxShadow: isSel ? "0 0 0 4px rgba(47,191,126,.28)" : undefined,
+                  boxShadow: isSel ? "0 0 0 4px rgba(212,175,106,.3)" : undefined,
                 }}
               >
                 {v >= 0.6 && (
@@ -88,7 +92,7 @@ export default function HeatMap({ heat, counts, selected, onSelect, bare = false
               </span>
               <span
                 className={`mt-1 block whitespace-nowrap rounded-md px-1.5 py-0.5 text-[10px] font-semibold transition ${
-                  isSel ? "bg-brand-strong text-[#04120c]" : "bg-surface/85 text-text-muted"
+                  isSel ? "bg-brand-strong text-on-brand" : "bg-surface/85 text-text-muted"
                 }`}
               >
                 {label}

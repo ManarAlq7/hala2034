@@ -120,7 +120,7 @@ export default function OpsShell({ children }: { children: React.ReactNode }) {
           <div className="mt-auto space-y-2 pt-6">
             <div className="flex items-center gap-1.5 text-[11px] text-text-dim">
               <span
-                className={`h-1.5 w-1.5 rounded-full ${shared ? "animate-pulse bg-brand" : "bg-text-dim"}`}
+                className={`h-1.5 w-1.5 rounded-full ${shared ? "animate-pulse bg-ok" : "bg-text-dim"}`}
               />
               {shared ? t("dash.sharedOn") : t("dash.sharedOff")}
             </div>

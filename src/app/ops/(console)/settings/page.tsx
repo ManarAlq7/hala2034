@@ -65,7 +65,7 @@ export default function SettingsPage() {
           <div className="space-y-4 p-4">
             <div className="flex items-center gap-2 text-sm">
               <span
-                className={`h-2 w-2 rounded-full ${shared ? "animate-pulse bg-brand" : "bg-text-dim"}`}
+                className={`h-2 w-2 rounded-full ${shared ? "animate-pulse bg-ok" : "bg-text-dim"}`}
               />
               <span className="text-text">
                 {shared ? t("set.storageShared") : t("set.storageLocal")}

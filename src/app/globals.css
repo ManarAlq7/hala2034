@@ -3,39 +3,44 @@
 /* ══════════════════════════════════════════════════════════════════ */
 /*  HALA 2034 — نظام التصميم                                          */
 /*                                                                    */
-/*  قاعدة داكنة عميقة بلمسة خضراء، وبريق ذهبي محدود.                   */
+/*  قاعدة فحمية محايدة تماماً، ولون مميّز ذهبي رملي.                     */
 /*  المرجع البصري: غرفة عمليات لا لوحة إدارة عامة — فالخلفية تنسحب      */
 /*  والبيانات هي التي تتقدّم. اللون لا يُستخدم للزينة: الأحمر خطر،       */
-/*  والكهرماني تحذير، والأخضر إغلاق، والذهبي للهوية وحدها.              */
+/*  والبرتقالي تحذير، والأخضر إغلاق، والذهبي للهوية والتفاعل وحدهما.     */
+/*                                                                    */
+/*  القاعدة محايدة عن قصد: أي مَيل لوني فيها يزاحم ألوان الدلالة،        */
+/*  فتضيع قراءة «هذا خطر» وسط خلفية ملوّنة.                              */
 /* ══════════════════════════════════════════════════════════════════ */
 
 :root {
   /* الأسطح — ست درجات تكفي لبناء العمق كله */
-  --bg: #070c0a;
-  --surface: #0e1613;
-  --surface-2: #131f1a;
-  --surface-3: #1a2823;
-  --line: #1e2f28;
-  --line-strong: #2c443a;
+  --bg: #0a0a0b;
+  --surface: #141416;
+  --surface-2: #1a1a1d;
+  --surface-3: #232327;
+  --line: #26262b;
+  --line-strong: #38383f;
 
   /* النص */
-  --text: #e6efea;
-  --text-muted: #8ba79a;
-  --text-dim: #5c766b;
+  --text: #ececee;
+  --text-muted: #a1a1a8;
+  --text-dim: #6e6e77;
 
-  /* الهوية */
-  --brand: #2fbf7e;
-  --brand-strong: #26a86d;
-  --brand-dim: #1a6b47;
-  --brand-wash: #0f2a1f;
-  --gold: #c9a961;
+  /* الهوية — الذهبي هو اللون المميّز الوحيد */
+  --brand: #d4af6a;
+  --brand-strong: #c39c52;
+  --brand-dim: #7a6231;
+  --brand-wash: #211a0d;
+  --gold: #d4af6a;
   --gold-dim: #8a7440;
+  /* النص فوق الأسطح الذهبية */
+  --on-brand: #1a1409;
 
-  /* الدلالة */
+  /* الدلالة — البرتقالي يميل عن الذهبي عمداً كي لا يُقرأ التحذير كزينة */
   --danger: #f2555a;
   --danger-wash: #2a1214;
-  --warn: #e8a33d;
-  --warn-wash: #2a2011;
+  --warn: #ef8a3c;
+  --warn-wash: #2a1a0e;
   --ok: #3ec97e;
   --ok-wash: #10261a;
   --info: #4ea8de;
@@ -61,6 +66,7 @@
   --color-brand-wash: var(--brand-wash);
   --color-gold: var(--gold);
   --color-gold-dim: var(--gold-dim);
+  --color-on-brand: var(--on-brand);
   --color-danger: var(--danger);
   --color-danger-wash: var(--danger-wash);
   --color-warn: var(--warn);
@@ -112,8 +118,8 @@ body {
 /* وهج خافت خلف الترويسات — الحد الأقصى المسموح من الزينة */
 .aura {
   background:
-    radial-gradient(900px 260px at 78% -120px, rgba(47, 191, 126, 0.1), transparent 65%),
-    radial-gradient(600px 200px at 10% -80px, rgba(201, 169, 97, 0.07), transparent 60%);
+    radial-gradient(900px 260px at 78% -120px, rgba(212, 175, 106, 0.11), transparent 65%),
+    radial-gradient(600px 200px at 10% -80px, rgba(212, 175, 106, 0.05), transparent 60%);
 }
 
 .grid-lines {
@@ -146,7 +152,7 @@ body {
 
 .btn-primary {
   background: var(--brand-strong);
-  color: #04120c;
+  color: var(--on-brand);
 }
 .btn-primary:not(:disabled):hover {
   background: var(--brand);
@@ -195,7 +201,7 @@ body {
 }
 .input:focus {
   border-color: var(--brand-dim);
-  box-shadow: 0 0 0 3px rgba(47, 191, 126, 0.12);
+  box-shadow: 0 0 0 3px rgba(212, 175, 106, 0.14);
 }
 
 .label {
@@ -237,7 +243,7 @@ body {
 }
 .chip-warn {
   background: var(--warn-wash);
-  border-color: rgba(232, 163, 61, 0.4);
+  border-color: rgba(239, 138, 60, 0.4);
   color: var(--warn);
 }
 .chip-ok {

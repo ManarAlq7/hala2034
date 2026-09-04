@@ -163,7 +163,7 @@ function Confirmation({ result, onAnother }: { result: SubmitResult; onAnother: 
       <div className="card overflow-hidden">
         {/* ما يهمّ المشجّع أولاً: وصل، وهذا رقمه */}
         <div className="border-b border-line bg-brand-wash px-5 py-6 text-center sm:px-8">
-          <span className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full bg-brand-strong text-lg text-[#04120c]">
+          <span className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full bg-brand-strong text-lg text-on-brand">
             ✓
           </span>
           <h1 className="text-xl font-bold text-text">{t("report.received")}</h1>
