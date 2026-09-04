@@ -22,11 +22,11 @@ function heatColor(v: number): string {
   if (v >= 0.5) return "var(--warn)";
   if (v >= 0.28) return "var(--info)";
   if (v > 0) return "var(--ok)";
-  return "var(--line-strong)";
+  return "var(--text-dim)";
 }
 
 const LEGEND = [
-  { c: "var(--line-strong)", k: "heat.none" },
+  { c: "var(--text-dim)", k: "heat.none" },
   { c: "var(--ok)", k: "heat.low" },
   { c: "var(--info)", k: "heat.medium" },
   { c: "var(--warn)", k: "heat.high" },
@@ -77,12 +77,12 @@ export default function HeatMap({ heat, counts, selected, onSelect, bare = false
               aria-pressed={isSel}
             >
               <span
-                className="relative grid place-items-center rounded-full text-[11px] font-bold text-on-brand transition group-hover:scale-110"
+                className="relative grid place-items-center rounded-full text-[11px] font-bold text-white transition group-hover:scale-110"
                 style={{
                   width: size,
                   height: size,
                   background: color,
-                  boxShadow: isSel ? "0 0 0 4px rgba(212,175,106,.3)" : undefined,
+                  boxShadow: isSel ? "0 0 0 4px rgba(138,106,36,.28)" : undefined,
                 }}
               >
                 {v >= 0.6 && (

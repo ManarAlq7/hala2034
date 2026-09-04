@@ -130,7 +130,7 @@ export default function OpsShell({ children }: { children: React.ReactNode }) {
 
       {menuOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/60 lg:hidden"
+          className="fixed inset-0 z-30 bg-black/35 lg:hidden"
           onClick={() => setMenuOpen(false)}
           aria-hidden
         />

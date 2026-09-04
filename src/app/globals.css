@@ -3,48 +3,51 @@
 /* ══════════════════════════════════════════════════════════════════ */
 /*  HALA 2034 — نظام التصميم                                          */
 /*                                                                    */
-/*  قاعدة فحمية محايدة تماماً، ولون مميّز ذهبي رملي.                     */
+/*  قاعدة فاتحة محايدة، ولون مميّز ذهبي برونزي.                          */
 /*  المرجع البصري: غرفة عمليات لا لوحة إدارة عامة — فالخلفية تنسحب      */
 /*  والبيانات هي التي تتقدّم. اللون لا يُستخدم للزينة: الأحمر خطر،       */
 /*  والبرتقالي تحذير، والأخضر إغلاق، والذهبي للهوية والتفاعل وحدهما.     */
 /*                                                                    */
 /*  القاعدة محايدة عن قصد: أي مَيل لوني فيها يزاحم ألوان الدلالة،        */
 /*  فتضيع قراءة «هذا خطر» وسط خلفية ملوّنة.                              */
+/*                                                                    */
+/*  ألوان الدلالة داكنة لا فاقعة: على خلفية بيضاء يحتاج اللون عتمةً كي   */
+/*  يبقى مقروءاً، والفاقع يصرخ ولا يُقرأ.                                 */
 /* ══════════════════════════════════════════════════════════════════ */
 
 :root {
   /* الأسطح — ست درجات تكفي لبناء العمق كله */
-  --bg: #0a0a0b;
-  --surface: #141416;
-  --surface-2: #1a1a1d;
-  --surface-3: #232327;
-  --line: #26262b;
-  --line-strong: #38383f;
+  --bg: #f5f5f6;
+  --surface: #ffffff;
+  --surface-2: #f2f2f4;
+  --surface-3: #eaeaee;
+  --line: #e3e3e8;
+  --line-strong: #c8c8d1;
 
   /* النص */
-  --text: #ececee;
-  --text-muted: #a1a1a8;
-  --text-dim: #6e6e77;
+  --text: #16161a;
+  --text-muted: #56565f;
+  --text-dim: #86868f;
 
-  /* الهوية — الذهبي هو اللون المميّز الوحيد */
-  --brand: #d4af6a;
-  --brand-strong: #c39c52;
-  --brand-dim: #7a6231;
-  --brand-wash: #211a0d;
-  --gold: #d4af6a;
-  --gold-dim: #8a7440;
+  /* الهوية — الذهبي هو اللون المميّز الوحيد، وعُتِّم كي يُقرأ على الأبيض */
+  --brand: #8a6a24;
+  --brand-strong: #9c7a2c;
+  --brand-dim: #d8c491;
+  --brand-wash: #faf4e6;
+  --gold: #8a6a24;
+  --gold-dim: #b79a55;
   /* النص فوق الأسطح الذهبية */
-  --on-brand: #1a1409;
+  --on-brand: #ffffff;
 
   /* الدلالة — البرتقالي يميل عن الذهبي عمداً كي لا يُقرأ التحذير كزينة */
-  --danger: #f2555a;
-  --danger-wash: #2a1214;
-  --warn: #ef8a3c;
-  --warn-wash: #2a1a0e;
-  --ok: #3ec97e;
-  --ok-wash: #10261a;
-  --info: #4ea8de;
-  --info-wash: #10222e;
+  --danger: #c62b31;
+  --danger-wash: #fdecec;
+  --warn: #a3610f;
+  --warn-wash: #fcf1e2;
+  --ok: #0f7a4f;
+  --ok-wash: #e8f6ef;
+  --info: #1f6f9e;
+  --info-wash: #eaf3fa;
 
   --radius: 0.75rem;
   --radius-lg: 1rem;
@@ -99,6 +102,8 @@ body {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
+  /* ظل خفيف جداً: على خلفية فاتحة لا يكفي الحدّ وحده لفصل البطاقة عن الصفحة */
+  box-shadow: 0 1px 2px rgba(22, 22, 26, 0.04);
 }
 
 .card-2 {
@@ -118,14 +123,14 @@ body {
 /* وهج خافت خلف الترويسات — الحد الأقصى المسموح من الزينة */
 .aura {
   background:
-    radial-gradient(900px 260px at 78% -120px, rgba(212, 175, 106, 0.11), transparent 65%),
-    radial-gradient(600px 200px at 10% -80px, rgba(212, 175, 106, 0.05), transparent 60%);
+    radial-gradient(900px 260px at 78% -120px, rgba(138, 106, 36, 0.09), transparent 65%),
+    radial-gradient(600px 200px at 10% -80px, rgba(138, 106, 36, 0.05), transparent 60%);
 }
 
 .grid-lines {
   background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.022) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+    linear-gradient(to right, rgba(22, 22, 26, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(22, 22, 26, 0.035) 1px, transparent 1px);
   background-size: 34px 34px;
 }
 
@@ -175,7 +180,7 @@ body {
 }
 .btn-danger:not(:disabled):hover {
   background: var(--danger);
-  color: #1a0708;
+  color: #ffffff;
 }
 
 .btn-sm {
@@ -201,7 +206,7 @@ body {
 }
 .input:focus {
   border-color: var(--brand-dim);
-  box-shadow: 0 0 0 3px rgba(212, 175, 106, 0.14);
+  box-shadow: 0 0 0 3px rgba(138, 106, 36, 0.16);
 }
 
 .label {
@@ -238,22 +243,22 @@ body {
 }
 .chip-danger {
   background: var(--danger-wash);
-  border-color: rgba(242, 85, 90, 0.4);
+  border-color: rgba(198, 43, 49, 0.28);
   color: var(--danger);
 }
 .chip-warn {
   background: var(--warn-wash);
-  border-color: rgba(239, 138, 60, 0.4);
+  border-color: rgba(163, 97, 15, 0.28);
   color: var(--warn);
 }
 .chip-ok {
   background: var(--ok-wash);
-  border-color: rgba(62, 201, 126, 0.35);
+  border-color: rgba(15, 122, 79, 0.26);
   color: var(--ok);
 }
 .chip-info {
   background: var(--info-wash);
-  border-color: rgba(78, 168, 222, 0.35);
+  border-color: rgba(31, 111, 158, 0.26);
   color: var(--info);
 }
 

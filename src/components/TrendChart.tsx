@@ -76,7 +76,7 @@ export default function TrendChart({ reports, now }: Props) {
                   width={barW}
                   height={h}
                   rx={0.6}
-                  fill={hover === i ? "var(--brand)" : "var(--brand-dim)"}
+                  fill={hover === i ? "var(--brand)" : "var(--gold-dim)"}
                 />
                 <rect x={x} y={H - uh} width={barW} height={uh} rx={0.6} fill="var(--danger)" />
               </g>
@@ -106,7 +106,7 @@ export default function TrendChart({ reports, now }: Props) {
         <span className="nums">{clockTime(buckets[0].at)}</span>
         <span className="inline-flex items-center gap-3">
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-sm" style={{ background: "var(--brand-dim)" }} />
+            <span className="h-2 w-2 rounded-sm" style={{ background: "var(--gold-dim)" }} />
             {t("trend.all")}
           </span>
           <span className="inline-flex items-center gap-1.5">

@@ -68,7 +68,7 @@ export default function ClusterDetail({ cluster, reports, onClose }: Props) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex bg-black/70 backdrop-blur-sm ${isRtl ? "justify-start" : "justify-end"}`}
+      className={`fixed inset-0 z-50 flex bg-black/35 backdrop-blur-[2px] ${isRtl ? "justify-start" : "justify-end"}`}
       onClick={onClose}
     >
       <div
