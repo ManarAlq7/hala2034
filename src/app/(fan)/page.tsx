@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { Crowd, PlayerRunning, StadiumGate as GateArt, Ticket } from "@/components/art/Line";
-import Football from "@/components/fan/Football";
-import JourneyStrip from "@/components/fan/JourneyStrip";
+import HeroScene from "@/components/fan/HeroScene";
 import StadiumArt, { sceneFor } from "@/components/fan/StadiumArt";
 import StadiumGate from "@/components/fan/StadiumGate";
 import {
@@ -51,14 +49,14 @@ export default function LandingPage() {
       <StadiumGate venues={venues} />
 
       {/* ------------------------------- الواجهة ------------------------------- */}
-      <section className="aura grid-lines relative isolate overflow-hidden border-b border-line">
-        {/* لاعب يركض خلف الواجهة: هوية الكرة بلا أن تُقرأ صورةً تزاحم العنوان */}
-        <PlayerRunning
-          weight={3}
-          className="pointer-events-none absolute -bottom-10 -z-10 hidden h-[26rem] text-brand opacity-[0.06] md:block ltr:-left-16 rtl:-right-16"
-        />
-        <div className="mx-auto grid max-w-5xl items-center gap-10 px-5 py-16 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:py-24">
-          <div>
+      <section className="aura relative isolate overflow-hidden border-b border-line">
+        {/*
+         * التكوين يملأ الواجهة ويُقصّ عند أطرافها، ويُعكس في العربية فيبقى اللاعب
+         * في الجهة المقابلة للنصّ لا تحته.
+         */}
+        <HeroScene className="pointer-events-none absolute inset-0 -z-10 h-full w-full text-brand rtl:-scale-x-100" />
+        <div className="mx-auto max-w-5xl px-5 py-20 sm:py-28 lg:py-32">
+          <div className="max-w-2xl">
           <span className="chip chip-brand">{t("land.badge")}</span>
           {/* الواجهة تحمل الصفحة: الحجم الصغير على شاشة عريضة يجعلها تبدو فارغة لا هادئة */}
           <h1 className="mt-5 max-w-4xl text-[2.15rem] font-bold leading-[1.08] tracking-tight text-text sm:text-6xl lg:text-7xl">
@@ -84,21 +82,6 @@ export default function LandingPage() {
               <Stat value={cities} label={t("land.cities")} />
             </dl>
           )}
-          </div>
-
-          {/* الكرة: عنصر التصميم الوحيد في الواجهة، ويكفي — رمز الحدث نفسه */}
-          <div className="relative hidden justify-self-center lg:block">
-            <div className="absolute inset-0 -z-10 rounded-full bg-brand/10 blur-3xl" />
-            <div className="ball-float">
-              <Football
-                uid="hero"
-                className="h-72 w-72 xl:h-80 xl:w-80"
-                patch="var(--brand)"
-                seam="var(--brand-dim)"
-                fill="var(--surface)"
-                spin
-              />
-            </div>
           </div>
         </div>
       </section>
@@ -130,9 +113,6 @@ export default function LandingPage() {
         </section>
       )}
 
-      {/* ما يفعله المشروع، قبل تفاصيل ما يعرضه */}
-      <JourneyStrip />
-
       <div className="mx-auto max-w-5xl space-y-14 px-5 py-14">
         {status === "loading" && (
           <p className="py-10 text-center text-sm text-text-dim">{t("common.loading")}</p>
@@ -143,7 +123,6 @@ export default function LandingPage() {
           <section>
             <SectionHead
               title={t("land.upcoming")}
-              Art={Ticket}
               note={t("land.demoData")}
               action={{ href: "/tickets", label: t("land.viewAll") }}
             />
@@ -194,7 +173,7 @@ export default function LandingPage() {
         {/* ------------------------------- الملاعب ------------------------------- */}
         {venues.length > 0 && (
           <section>
-            <SectionHead title={t("land.venues")} Art={GateArt} />
+            <SectionHead title={t("land.venues")} />
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {venues.map((v, i) => (
                 <li key={v.id}>
@@ -228,7 +207,6 @@ export default function LandingPage() {
           <section>
             <SectionHead
               title={t("land.zones")}
-              Art={Crowd}
               action={{ href: "/fan-zones", label: t("land.viewAll") }}
             />
             <ul className="grid gap-3 sm:grid-cols-3">
@@ -304,18 +282,14 @@ function SectionHead({
   title,
   note,
   action,
-  Art,
 }: {
   title: string;
   note?: string;
   action?: { href: string; label: string };
-  /** رسم صغير يقول موضوع القسم قبل قراءة عنوانه */
-  Art?: (p: { className?: string; weight?: number }) => React.JSX.Element;
 }) {
   return (
     <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
       <div className="flex items-center gap-2.5">
-        {Art && <Art weight={5} className="h-7 w-7 shrink-0 text-brand" />}
         <h2 className="text-xl font-bold tracking-tight text-text sm:text-2xl">{title}</h2>
         {note && <span className="chip chip-neutral">{note}</span>}
       </div>
