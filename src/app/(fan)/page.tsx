@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
 import StadiumArt, { sceneFor } from "@/components/fan/StadiumArt";
@@ -49,8 +50,8 @@ export default function LandingPage() {
 
       {/* ------------------------------- الواجهة ------------------------------- */}
       <section className="aura grid-lines border-b border-line">
-        <div className="mx-auto max-w-5xl px-5 py-16 sm:py-20 lg:py-24">
-          <div className="max-w-3xl">
+        <div className="mx-auto grid max-w-5xl items-center gap-10 px-5 py-16 sm:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:py-24">
+          <div>
           <span className="chip chip-brand">{t("land.badge")}</span>
           {/* الواجهة تحمل الصفحة: الحجم الصغير على شاشة عريضة يجعلها تبدو فارغة لا هادئة */}
           <h1 className="mt-5 max-w-4xl text-[2.15rem] font-bold leading-[1.08] tracking-tight text-text sm:text-6xl lg:text-7xl">
@@ -76,6 +77,22 @@ export default function LandingPage() {
               <Stat value={cities} label={t("land.cities")} />
             </dl>
           )}
+          </div>
+
+          {/*
+           * رسمة من unDraw، مُحوَّلة إلى ألوان هلا بـ scripts/recolour-art.
+           * رخصتها تتيح الاستعمال التجاري بلا إسناد مطلوب.
+           */}
+          <div className="hidden justify-self-center lg:block">
+            <Image
+              src="/art/goal.svg"
+              alt=""
+              width={520}
+              height={262}
+              priority
+              unoptimized
+              className="w-full max-w-md"
+            />
           </div>
         </div>
       </section>
