@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { useMemo } from "react";
 import LocationCard from "@/components/fan/LocationCard";
+import PageHero from "@/components/fan/PageHero";
 import StadiumArt, { sceneFor } from "@/components/fan/StadiumArt";
 import {
   matchAway,
@@ -52,37 +53,25 @@ export default function VenuePage() {
 
   return (
     <div>
-      <section className="relative isolate overflow-hidden border-b border-line">
-        <div className="absolute inset-0 -z-10">
+      <PageHero
+        back={{ href: "/", label: t("land.venues") }}
+        eyebrow={venueCity(venue, locale)}
+        title={venueName(venue, locale)}
+        pills={[
+          {
+            label: `${venue.capacity.toLocaleString("en-US")} · ${t("land.capacityApprox")}`,
+            nums: true,
+          },
+          { label: t("vn.matchCount", { n: venueMatches.length }), nums: true },
+        ]}
+      />
+
+      {/* رسم الملعب في إطاره: خلف النصّ كان يبتلعه، وهنا يُرى كاملاً */}
+      <div className="mx-auto max-w-5xl px-5 pt-8">
+        <div className="aspect-[21/8] overflow-hidden rounded-2xl border border-line bg-surface-3">
           <StadiumArt scene={sceneFor(venue.id, index)} uid={`venue-${venue.id}`} className="h-full w-full" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
         </div>
-
-        <div className="mx-auto max-w-5xl px-5 py-14 text-white sm:py-20">
-          <Link
-            href="/"
-            className="text-[12px] font-semibold text-white/70 underline underline-offset-4 transition hover:text-white"
-          >
-            ← {t("land.venues")}
-          </Link>
-
-          <p className="mt-5 text-[11px] uppercase tracking-[0.18em] text-white/70">
-            {venueCity(venue, locale)}
-          </p>
-          <h1 className="mt-1.5 max-w-2xl text-3xl font-bold leading-tight sm:text-5xl">
-            {venueName(venue, locale)}
-          </h1>
-
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            <span className="nums rounded-full bg-white/12 px-3 py-1.5 text-[12px] text-white/85 backdrop-blur">
-              {venue.capacity.toLocaleString("en-US")} · {t("land.capacityApprox")}
-            </span>
-            <span className="nums rounded-full bg-white/12 px-3 py-1.5 text-[12px] text-white/85 backdrop-blur">
-              {t("vn.matchCount", { n: venueMatches.length })}
-            </span>
-          </div>
-        </div>
-      </section>
+      </div>
 
       <div className="mx-auto max-w-5xl space-y-12 px-5 py-12">
         <LocationCard

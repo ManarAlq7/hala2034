@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { useMemo } from "react";
 import LocationCard from "@/components/fan/LocationCard";
+import PageHero from "@/components/fan/PageHero";
 import ZoneArt, { zoneSceneFor } from "@/components/fan/ZoneArt";
 import {
   matchAway,
@@ -72,50 +73,26 @@ export default function FanZonePage() {
 
   return (
     <div>
-      {/* ------------------------------- الواجهة ------------------------------- */}
-      <section className="relative isolate overflow-hidden border-b border-line">
-        <div className="absolute inset-0 -z-10">
+      <PageHero
+        back={{ href: "/fan-zones", label: t("fz.title") }}
+        eyebrow={zoneCity(zone, locale)}
+        title={zoneName(zone, locale)}
+        lead={zoneAbout(zone, locale)}
+        pills={[
+          open
+            ? { label: t("fz.openNow"), tone: "ok" as const }
+            : { label: t("fz.opensIn", { n: Math.round(untilOpen / 60) }) },
+          { label: `${zone.opensAt} – ${zone.closesAt}`, nums: true },
+          { label: `${t("fz.capacity")} ${zone.capacity.toLocaleString("en-US")}`, nums: true },
+        ]}
+      />
+
+      {/* اللوحة في إطارها تحت الرأس: لكلٍّ مساحته، فلا تقع الشاشة على العنوان */}
+      <div className="mx-auto max-w-5xl px-5 pt-8">
+        <div className="aspect-[21/8] overflow-hidden rounded-2xl border border-line bg-surface-3">
           <ZoneArt scene={zoneSceneFor(zone.id, index)} uid={`hero-${zone.id}`} className="h-full w-full" />
-          {/* الحجاب يثقل عند الأسفل حيث النصّ، ويخفّ عند الأعلى كي تُرى اللوحة */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
         </div>
-
-        <div className="mx-auto max-w-5xl px-5 py-14 text-white sm:py-20">
-          <Link
-            href="/fan-zones"
-            className="text-[12px] font-semibold text-white/70 underline underline-offset-4 transition hover:text-white"
-          >
-            ← {t("fz.title")}
-          </Link>
-
-          <p className="mt-5 text-[11px] uppercase tracking-[0.18em] text-white/70">
-            {zoneCity(zone, locale)}
-          </p>
-          <h1 className="mt-1.5 max-w-2xl text-3xl font-bold leading-tight sm:text-5xl">
-            {zoneName(zone, locale)}
-          </h1>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/80 sm:text-base">
-            {zoneAbout(zone, locale)}
-          </p>
-
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-bold ${
-                open ? "bg-ok text-white" : "bg-white/15 text-white/85 backdrop-blur"
-              }`}
-            >
-              <span className={`h-1.5 w-1.5 rounded-full ${open ? "bg-white" : "bg-white/60"}`} />
-              {open ? t("fz.openNow") : t("fz.opensIn", { n: Math.round(untilOpen / 60) })}
-            </span>
-            <span className="nums rounded-full bg-white/12 px-3 py-1.5 text-[12px] text-white/85 backdrop-blur">
-              {zone.opensAt} – {zone.closesAt}
-            </span>
-            <span className="nums rounded-full bg-white/12 px-3 py-1.5 text-[12px] text-white/85 backdrop-blur">
-              {t("fz.capacity")} {zone.capacity.toLocaleString("en-US")}
-            </span>
-          </div>
-        </div>
-      </section>
+      </div>
 
       <div className="mx-auto max-w-5xl space-y-12 px-5 py-12">
         {/* -------------------------------- المزايا -------------------------------- */}

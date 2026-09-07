@@ -45,12 +45,15 @@ export default function FanZonesPage() {
               >
                 <div className="relative aspect-[16/7] overflow-hidden border-b border-line">
                   <ZoneArt scene={zoneSceneFor(z.id, i)} uid={`card-${z.id}`} className="h-full w-full" />
+                  {/* شارة على أرضية الموقع لا لون مصمت: الأخضر الصارخ كان ينطّ من الصفحة */}
                   <span
-                    className={`absolute end-3 top-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${
-                      open ? "bg-ok text-white" : "bg-black/45 text-white/90 backdrop-blur"
+                    className={`absolute end-3 top-3 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold backdrop-blur ${
+                      open
+                        ? "border-ok/25 bg-ok-wash/95 text-ok"
+                        : "border-line bg-surface/90 text-text-muted"
                     }`}
                   >
-                    <span className={`h-1.5 w-1.5 rounded-full ${open ? "bg-white" : "bg-white/60"}`} />
+                    <span className={`h-1.5 w-1.5 rounded-full ${open ? "bg-ok" : "bg-text-dim"}`} />
                     {open ? t("fz.openNow") : t("fz.opensIn", { n: Math.round(untilOpen / 60) })}
                   </span>
                 </div>
