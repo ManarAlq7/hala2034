@@ -710,3 +710,48 @@ body {
   .gate-tick[data-on="true"] .gate-tick-fill { animation: none; inline-size: 100%; }
   .gate-leaving { opacity: 0; transition: opacity 200ms linear; }
 }
+
+/* -------------------------------------------------------------------------- */
+/*  الكرة                                                                      */
+/*                                                                             */
+/*  دورة بطيئة جداً: الكرة عنصر تصميم لا رسم متحرّك، والدوران السريع يسحب        */
+/*  العين عن العنوان الذي جاءت لتخدمه.                                          */
+/* -------------------------------------------------------------------------- */
+
+.ball-spin {
+  animation: ball-turn 44s linear infinite;
+  transform-origin: 50% 50%;
+}
+
+@keyframes ball-turn {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* طفوٌ خفيف يمنع الكرة من أن تبدو ملصقة على الصفحة */
+.ball-float {
+  animation: ball-bob 7s ease-in-out infinite;
+}
+
+@keyframes ball-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+
+/* ظهور تدريجي عند الوصول — يُشغَّل بإضافة data-shown */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.reveal[data-shown="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ball-spin,
+  .ball-float { animation: none; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+}

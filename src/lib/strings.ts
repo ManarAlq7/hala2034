@@ -430,6 +430,10 @@ export const AR = {
   "an.withinTarget": "داخل المهلة",
 
   /* -------------------------------- المرشد -------------------------------- */
+  "watch.title": "بثّ المباراة",
+  "watch.commentary": "التعليق الحيّ",
+  "watch.noStream": "حقوق بثّ المباريات مملوكة لجهات بعينها، ولا يُعرض هنا بثّ غير مصرّح به. حين يُضاف رابط رسمي يظهر في هذا المكان — وحتى ذلك الحين، التعليق الحيّ يجري بجانبه.",
+  "watch.whereTitle": "أين تُشاهَد على الأرض",
   "guide.button": "دلّني",
   "guide.title": "مرشد الحدث",
   "guide.subtitle": "اسأل بأي لغة، ويوصلك للصفحة مباشرة.",
@@ -904,6 +908,10 @@ export const EN: Record<StringKey, string> = {
   "tk.scanHint": "Show this code at the gate.",
   "an.medianResponse": "Median response",
   "an.withinTarget": "Within target",
+  "watch.title": "Match broadcast",
+  "watch.commentary": "Live commentary",
+  "watch.noStream": "Broadcast rights belong to specific holders, and no unauthorised stream is shown here. When an official link is added it appears in this frame — until then, the live commentary runs beside it.",
+  "watch.whereTitle": "Where to watch in person",
   "guide.button": "Guide me",
   "guide.title": "Event guide",
   "guide.subtitle": "Ask in any language; it takes you straight to the page.",

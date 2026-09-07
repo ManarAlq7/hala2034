@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import MatchWatch from "@/components/fan/MatchWatch";
 import {
   matchAway,
   matchHome,
@@ -19,12 +20,13 @@ import {
   clockLabel,
   eventDetail,
   eventPlayer,
-  fetchLineups,
+  fetchMatchExtras,
   scoreOf,
   toggleFollow,
   useFollowing,
   useLiveEvents,
   type Lineup,
+  type MatchExtras,
 } from "@/lib/matchday";
 import { askNotifyPermission } from "@/lib/notify";
 
@@ -37,7 +39,7 @@ import { askNotifyPermission } from "@/lib/notify";
 export default function MatchPage() {
   const params = useParams<{ id: string }>();
   const { t, locale } = useLocale();
-  const { matches, venues, status } = useCatalog();
+  const { matches, venues, zones, status } = useCatalog();
   const now = useNow();
 
   const match = matches.find((m) => m.id === params.id);
@@ -45,16 +47,19 @@ export default function MatchPage() {
 
   const following = useFollowing(params.id);
   const { events, loaded } = useLiveEvents(params.id, following);
-  const [lineups, setLineups] = useState<{ home: Lineup | null; away: Lineup | null }>({
+  const [extras, setExtras] = useState<MatchExtras>({
     home: null,
     away: null,
+    streamUrl: null,
+    streamLabelAr: null,
+    streamLabelEn: null,
   });
 
   useEffect(() => {
     let alive = true;
-    void fetchLineups(params.id)
+    void fetchMatchExtras(params.id)
       .then((l) => {
-        if (alive) setLineups(l);
+        if (alive) setExtras(l);
       })
       .catch(() => {
         // لا تشكيلة معلنة بعد — الصفحة تعمل بدونها
@@ -135,6 +140,18 @@ export default function MatchPage() {
 
       {following && <p className="mt-2 text-center text-[11px] text-text-dim">{t("mt.followNote")}</p>}
 
+      {/* المشاهدة والتعليق في أعلى الصفحة: هما ما يُفتح لأجله في يوم المباراة */}
+      <div className="mt-8">
+        <MatchWatch
+          streamUrl={extras.streamUrl}
+          streamLabel={locale === "ar" ? extras.streamLabelAr : extras.streamLabelEn}
+          events={events}
+          live={live}
+          venue={venue}
+          zones={venue ? zones.filter((z) => z.cityEn === venue.cityEn) : []}
+        />
+      </div>
+
       {/* -------------------------------- الأحداث -------------------------------- */}
       <section className="mt-8">
         <h2 className="text-lg font-bold text-text">{t("mt.timeline")}</h2>
@@ -177,12 +194,12 @@ export default function MatchPage() {
       </section>
 
       {/* ------------------------------- التشكيلة ------------------------------- */}
-      {(lineups.home || lineups.away) && (
+      {(extras.home || extras.away) && (
         <section className="mt-10">
           <h2 className="text-lg font-bold text-text">{t("mt.lineups")}</h2>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
-            <LineupCard title={matchHome(match, locale)} lineup={lineups.home} />
-            <LineupCard title={matchAway(match, locale)} lineup={lineups.away} />
+            <LineupCard title={matchHome(match, locale)} lineup={extras.home} />
+            <LineupCard title={matchAway(match, locale)} lineup={extras.away} />
           </div>
           <p className="mt-3 text-[11px] text-text-dim">{t("mt.lineupDemo")}</p>
         </section>

@@ -146,19 +146,47 @@ export async function fetchEvents(matchId: string): Promise<MatchEvent[]> {
   return ((data ?? []) as EventRow[]).map(toEvent);
 }
 
-export async function fetchLineups(
-  matchId: string,
-): Promise<{ home: Lineup | null; away: Lineup | null }> {
-  if (!hasSupabase) return { home: null, away: null };
+export interface MatchExtras {
+  home: Lineup | null;
+  away: Lineup | null;
+  /** رابط بثّ مصرّح به يضعه صاحب الحقّ — يبقى فارغاً وإلا */
+  streamUrl: string | null;
+  streamLabelAr: string | null;
+  streamLabelEn: string | null;
+}
+
+export async function fetchMatchExtras(matchId: string): Promise<MatchExtras> {
+  const empty: MatchExtras = {
+    home: null,
+    away: null,
+    streamUrl: null,
+    streamLabelAr: null,
+    streamLabelEn: null,
+  };
+  if (!hasSupabase) return empty;
+
   const { data, error } = await supabase()
     .from("matches")
-    .select("lineup_home, lineup_away")
+    .select("lineup_home, lineup_away, stream_url, stream_label_ar, stream_label_en")
     .eq("id", matchId)
     .single();
   if (error) throw error;
 
-  const row = data as { lineup_home: Lineup | null; lineup_away: Lineup | null };
-  return { home: row.lineup_home, away: row.lineup_away };
+  const row = data as {
+    lineup_home: Lineup | null;
+    lineup_away: Lineup | null;
+    stream_url: string | null;
+    stream_label_ar: string | null;
+    stream_label_en: string | null;
+  };
+
+  return {
+    home: row.lineup_home,
+    away: row.lineup_away,
+    streamUrl: row.stream_url,
+    streamLabelAr: row.stream_label_ar,
+    streamLabelEn: row.stream_label_en,
+  };
 }
 
 /* -------------------------------- المتابعة -------------------------------- */

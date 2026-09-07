@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import Football from "@/components/fan/Football";
 import StadiumArt, { sceneFor } from "@/components/fan/StadiumArt";
 import StadiumGate from "@/components/fan/StadiumGate";
 import {
@@ -49,7 +50,8 @@ export default function LandingPage() {
 
       {/* ------------------------------- الواجهة ------------------------------- */}
       <section className="aura grid-lines border-b border-line">
-        <div className="mx-auto max-w-5xl px-5 py-16 sm:py-24 lg:py-28">
+        <div className="mx-auto grid max-w-5xl items-center gap-10 px-5 py-16 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:py-24">
+          <div>
           <span className="chip chip-brand">{t("land.badge")}</span>
           {/* الواجهة تحمل الصفحة: الحجم الصغير على شاشة عريضة يجعلها تبدو فارغة لا هادئة */}
           <h1 className="mt-5 max-w-4xl text-[2.15rem] font-bold leading-[1.08] tracking-tight text-text sm:text-6xl lg:text-7xl">
@@ -75,6 +77,21 @@ export default function LandingPage() {
               <Stat value={cities} label={t("land.cities")} />
             </dl>
           )}
+          </div>
+
+          {/* الكرة: عنصر التصميم الوحيد في الواجهة، ويكفي — رمز الحدث نفسه */}
+          <div className="relative hidden justify-self-center lg:block">
+            <div className="absolute inset-0 -z-10 rounded-full bg-brand/10 blur-3xl" />
+            <div className="ball-float">
+              <Football
+                uid="hero"
+                className="h-72 w-72 text-text xl:h-80 xl:w-80"
+                patch="var(--text)"
+                seam="var(--line-strong)"
+                spin
+              />
+            </div>
+          </div>
         </div>
       </section>
 
