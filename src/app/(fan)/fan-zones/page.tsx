@@ -1,23 +1,22 @@
 "use client";
 
-import {
-  useCatalog,
-  zoneAbout,
-  zoneCity,
-  zoneFeatures,
-  zoneName,
-} from "@/lib/catalog";
+import Link from "next/link";
+import ZoneArt, { zoneSceneFor } from "@/components/fan/ZoneArt";
+import { useCatalog, zoneAbout, zoneCity, zoneName } from "@/lib/catalog";
+import { useNow } from "@/lib/clock";
 import { useLocale } from "@/lib/i18n";
+import { amenityName, isOpenNow, minutesUntilOpen, zoneAmenities } from "@/lib/zones";
 
 /**
  * مناطق المشجعين خارج الملاعب.
  *
- * صفحة قراءة فقط: المشجّع يقرّر أين يذهب، فالمطلوب المدينة والتوقيت والسعة
- * وما يجده هناك — لا أكثر.
+ * البطاقة تجيب سؤال الاختيار وحده: أين، ومفتوحة الآن أم لا، وأبرز ما فيها.
+ * والتفصيل خلف نقرة — من لم يختر بعد لا يريد قائمة مزايا ستّ مناطق دفعةً واحدة.
  */
 export default function FanZonesPage() {
   const { t, locale } = useLocale();
   const { zones, status } = useCatalog();
+  const now = useNow();
 
   return (
     <div className="mx-auto max-w-5xl px-5 py-10 sm:py-14">
@@ -33,32 +32,69 @@ export default function FanZonesPage() {
       )}
 
       <ul className="grid gap-4 sm:grid-cols-2">
-        {zones.map((z) => (
-          <li key={z.id} className="card flex flex-col p-5">
-            <p className="text-[11px] uppercase tracking-[0.12em] text-brand">
-              {zoneCity(z, locale)}
-            </p>
-            <h2 className="mt-1.5 text-lg font-bold leading-snug text-text">{zoneName(z, locale)}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-text-muted">{zoneAbout(z, locale)}</p>
+        {zones.map((z, i) => {
+          const open = isOpenNow(z, now);
+          const untilOpen = minutesUntilOpen(z, now);
+          const amenities = zoneAmenities(z);
 
-            <ul className="mt-4 flex flex-wrap gap-1.5">
-              {zoneFeatures(z, locale).map((f) => (
-                <li key={f} className="chip chip-neutral">
-                  {f}
-                </li>
-              ))}
-            </ul>
+          return (
+            <li key={z.id}>
+              <Link
+                href={`/fan-zones/${z.id}`}
+                className="card card-link flex h-full flex-col overflow-hidden"
+              >
+                <div className="relative aspect-[16/7] overflow-hidden border-b border-line">
+                  <ZoneArt scene={zoneSceneFor(z.id, i)} uid={`card-${z.id}`} className="h-full w-full" />
+                  <span
+                    className={`absolute end-3 top-3 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                      open ? "bg-ok text-white" : "bg-black/45 text-white/90 backdrop-blur"
+                    }`}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${open ? "bg-white" : "bg-white/60"}`} />
+                    {open ? t("fz.openNow") : t("fz.opensIn", { n: Math.round(untilOpen / 60) })}
+                  </span>
+                </div>
 
-            <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-4 text-[11px] text-text-dim">
-              <span className="nums">
-                {t("fz.opens")} {z.opensAt}–{z.closesAt}
-              </span>
-              <span className="nums">
-                {t("fz.capacity")} {z.capacity.toLocaleString("en-US")} {t("fz.person")}
-              </span>
-            </div>
-          </li>
-        ))}
+                <div className="flex flex-1 flex-col p-5">
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-brand">
+                    {zoneCity(z, locale)}
+                  </p>
+                  <h2 className="mt-1.5 text-lg font-bold leading-snug text-text">
+                    {zoneName(z, locale)}
+                  </h2>
+                  <p className="mt-2 text-sm leading-relaxed text-text-muted">
+                    {zoneAbout(z, locale)}
+                  </p>
+
+                  {/* أبرز ثلاث مزايا فقط — البقية خلف النقرة */}
+                  <ul className="mt-4 flex flex-wrap gap-1.5">
+                    {amenities.slice(0, 3).map((a) => (
+                      <li key={a.key} className="chip chip-neutral">
+                        <span aria-hidden className="me-1">
+                          {a.icon}
+                        </span>
+                        {amenityName(a, locale)}
+                      </li>
+                    ))}
+                    {amenities.length > 3 && (
+                      <li className="chip chip-brand">+{amenities.length - 3}</li>
+                    )}
+                  </ul>
+
+                  <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line pt-4 text-[11px] text-text-dim">
+                    <span className="nums">
+                      {t("fz.opens")} {z.opensAt}–{z.closesAt}
+                    </span>
+                    <span className="nums">
+                      {t("fz.capacity")} {z.capacity.toLocaleString("en-US")} {t("fz.person")}
+                    </span>
+                    <span className="ms-auto font-semibold text-brand">{t("fz.more")} →</span>
+                  </div>
+                </div>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

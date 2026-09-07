@@ -194,14 +194,17 @@ export default function LandingPage() {
             />
             <ul className="grid gap-3 sm:grid-cols-3">
               {zones.slice(0, 3).map((z) => (
-                <li key={z.id} className="card p-4">
-                  <p className="text-[11px] uppercase tracking-[0.12em] text-brand">
-                    {zoneCity(z, locale)}
-                  </p>
-                  <p className="mt-1.5 font-bold leading-snug text-text">{zoneName(z, locale)}</p>
-                  <p className="nums mt-2 text-[11px] text-text-dim">
-                    {t("fz.opens")} {z.opensAt}–{z.closesAt}
-                  </p>
+                <li key={z.id}>
+                  {/* المنطقة تُفتح من هنا أيضاً: بطاقة لا تُنقر تُعلّم الزائر ألّا ينقر */}
+                  <Link href={`/fan-zones/${z.id}`} className="card card-link block h-full p-4">
+                    <p className="text-[11px] uppercase tracking-[0.12em] text-brand">
+                      {zoneCity(z, locale)}
+                    </p>
+                    <p className="mt-1.5 font-bold leading-snug text-text">{zoneName(z, locale)}</p>
+                    <p className="nums mt-2 text-[11px] text-text-dim">
+                      {t("fz.opens")} {z.opensAt}–{z.closesAt}
+                    </p>
+                  </Link>
                 </li>
               ))}
             </ul>

@@ -57,6 +57,8 @@ export interface FanZone {
   aboutAr: string;
   aboutEn: string;
   capacity: number;
+  /** مفاتيح المزايا — الأسماء والأيقونات في lib/zones */
+  amenities: string[];
   opensAt: string;
   closesAt: string;
   featuresAr: string[];
@@ -144,6 +146,7 @@ interface ZoneRow {
   closes_at: string;
   features_ar: string[] | null;
   features_en: string[] | null;
+  amenities: string[] | null;
 }
 
 export interface Catalog {
@@ -209,6 +212,7 @@ export async function fetchCatalog(): Promise<Catalog> {
       aboutAr: z.about_ar,
       aboutEn: z.about_en,
       capacity: z.capacity,
+      amenities: z.amenities ?? [],
       opensAt: z.opens_at,
       closesAt: z.closes_at,
       featuresAr: z.features_ar ?? [],

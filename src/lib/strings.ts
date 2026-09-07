@@ -378,6 +378,16 @@ export const AR = {
   "fz.capacity": "تستوعب",
   "fz.person": "شخص",
   "fz.empty": "لا توجد مناطق معروضة.",
+  "fz.openNow": "مفتوحة الآن",
+  "fz.opensIn": "تفتح بعد {n} ساعة",
+  "fz.more": "التفاصيل",
+  "fz.amenities": "ما تجده هناك",
+  "fz.amenitiesNote": "{n} ميزة في هذه المنطقة.",
+  "fz.matchesHere": "مباريات {city} التي تُعرض هنا",
+  "fz.matchesNote": "الساحة تنقل مباريات المدينة مباشرة على شاشاتها.",
+  "fz.reportTitle": "شفت شيئاً هنا يحتاج تدخّلاً؟",
+  "fz.reportBody": "زحمة عند مدخل، أو دورة مياه تحتاج تنظيفاً — أخبرنا ويصل البلاغ للفريق المسؤول فوراً.",
+
 
   "tk.scanHint": "اعرض هذا الرمز عند البوابة.",
   "an.medianResponse": "وسيط الاستجابة",
@@ -794,6 +804,16 @@ export const EN: Record<StringKey, string> = {
   "fz.capacity": "Holds",
   "fz.person": "people",
   "fz.empty": "No fan zones to show.",
+  "fz.openNow": "Open now",
+  "fz.opensIn": "Opens in {n}h",
+  "fz.more": "Details",
+  "fz.amenities": "What you will find there",
+  "fz.amenitiesNote": "{n} things on site.",
+  "fz.matchesHere": "{city} matches shown here",
+  "fz.matchesNote": "The zone carries the city's matches live on its screens.",
+  "fz.reportTitle": "Something here needs attention?",
+  "fz.reportBody": "A crush at an entrance, or a restroom that needs cleaning — tell us and it reaches the right team straight away.",
+
 
   "tk.scanHint": "Show this code at the gate.",
   "an.medianResponse": "Median response",
