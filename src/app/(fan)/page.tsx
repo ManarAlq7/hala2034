@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import HeroScene from "@/components/fan/HeroScene";
+import RunnerIllustration from "@/components/fan/RunnerIllustration";
 import StadiumArt, { sceneFor } from "@/components/fan/StadiumArt";
 import StadiumGate from "@/components/fan/StadiumGate";
 import {
@@ -49,14 +49,9 @@ export default function LandingPage() {
       <StadiumGate venues={venues} />
 
       {/* ------------------------------- الواجهة ------------------------------- */}
-      <section className="aura relative isolate overflow-hidden border-b border-line">
-        {/*
-         * التكوين يملأ الواجهة ويُقصّ عند أطرافها، ويُعكس في العربية فيبقى اللاعب
-         * في الجهة المقابلة للنصّ لا تحته.
-         */}
-        <HeroScene className="pointer-events-none absolute inset-0 -z-10 h-full w-full text-brand rtl:-scale-x-100" />
-        <div className="mx-auto max-w-5xl px-5 py-20 sm:py-28 lg:py-32">
-          <div className="max-w-2xl">
+      <section className="aura grid-lines border-b border-line">
+        <div className="mx-auto grid max-w-5xl items-center gap-10 px-5 py-16 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:py-24">
+          <div>
           <span className="chip chip-brand">{t("land.badge")}</span>
           {/* الواجهة تحمل الصفحة: الحجم الصغير على شاشة عريضة يجعلها تبدو فارغة لا هادئة */}
           <h1 className="mt-5 max-w-4xl text-[2.15rem] font-bold leading-[1.08] tracking-tight text-text sm:text-6xl lg:text-7xl">
@@ -82,6 +77,10 @@ export default function LandingPage() {
               <Stat value={cities} label={t("land.cities")} />
             </dl>
           )}
+          </div>
+
+          <div className="hidden justify-self-center lg:block">
+            <RunnerIllustration className="w-full max-w-sm" />
           </div>
         </div>
       </section>
