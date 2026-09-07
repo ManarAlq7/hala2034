@@ -49,16 +49,17 @@ export default function LandingPage() {
 
       {/* ------------------------------- الواجهة ------------------------------- */}
       <section className="aura grid-lines border-b border-line">
-        <div className="mx-auto max-w-5xl px-5 py-14 sm:py-20">
+        <div className="mx-auto max-w-5xl px-5 py-16 sm:py-24 lg:py-28">
           <span className="chip chip-brand">{t("land.badge")}</span>
-          <h1 className="mt-4 max-w-3xl text-3xl font-bold leading-tight text-text sm:text-5xl">
+          {/* الواجهة تحمل الصفحة: الحجم الصغير على شاشة عريضة يجعلها تبدو فارغة لا هادئة */}
+          <h1 className="mt-5 max-w-4xl text-[2.15rem] font-bold leading-[1.08] tracking-tight text-text sm:text-6xl lg:text-7xl">
             {t("land.title")}
           </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-text-muted sm:text-base">
+          <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-text-muted sm:text-lg">
             {t("land.subtitle")}
           </p>
 
-          <div className="mt-7 flex flex-wrap gap-2.5">
+          <div className="mt-9 flex flex-wrap gap-2.5">
             <Link href="/tickets" className="btn btn-primary px-5 py-3">
               {t("land.ctaTickets")}
             </Link>
@@ -68,7 +69,7 @@ export default function LandingPage() {
           </div>
 
           {status === "ready" && (
-            <dl className="mt-9 grid max-w-lg grid-cols-3 gap-4 border-t border-line pt-6">
+            <dl className="mt-12 grid max-w-xl grid-cols-3 divide-x divide-line border-t border-line pt-7 rtl:divide-x-reverse">
               <Stat value={matches.length} label={t("land.upcoming")} />
               <Stat value={venues.length} label={t("land.venues")} />
               <Stat value={cities} label={t("land.cities")} />
@@ -79,7 +80,11 @@ export default function LandingPage() {
 
       {/* --------------------------- شريط المباريات --------------------------- */}
       {upcoming.length > 0 && (
-        <section className="border-b border-line bg-surface py-4">
+        <section className="border-b border-line bg-surface py-5">
+          {/* عنوان صغير يجعل الشريط معلومةً لا زخرفةً متحرّكة */}
+          <p className="mx-auto mb-3 max-w-5xl px-5 text-[10px] uppercase tracking-[0.16em] text-text-dim">
+            {t("land.upcoming")}
+          </p>
           <div className="marquee-hold marquee-mask overflow-hidden">
             <div className="marquee-track gap-3">
               {/* التكرار مرّتان هو ما يجعل الدورة متصلة بلا قفزة */}
@@ -245,9 +250,9 @@ export default function LandingPage() {
 
 function Stat({ value, label }: { value: number; label: string }) {
   return (
-    <div>
-      <dt className="nums text-2xl font-bold text-text">{value}</dt>
-      <dd className="mt-0.5 text-[11px] text-text-dim">{label}</dd>
+    <div className="px-4 first:ps-0 last:pe-0">
+      <dt className="nums text-3xl font-bold tracking-tight text-text sm:text-4xl">{value}</dt>
+      <dd className="mt-1 text-[11px] uppercase tracking-[0.12em] text-text-dim">{label}</dd>
     </div>
   );
 }
@@ -257,10 +262,10 @@ function Side({ flag, name, align = "start" }: { flag: string; name: string; ali
     <span
       className={`flex min-w-0 flex-1 items-center gap-2 ${align === "end" ? "flex-row-reverse text-end" : ""}`}
     >
-      <span aria-hidden className="text-lg">
+      <span aria-hidden className="text-2xl leading-none">
         {flag}
       </span>
-      <span className="truncate text-sm font-bold text-text">{name}</span>
+      <span className="truncate text-[15px] font-bold leading-snug text-text">{name}</span>
     </span>
   );
 }
@@ -275,9 +280,9 @@ function SectionHead({
   action?: { href: string; label: string };
 }) {
   return (
-    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+    <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
       <div className="flex items-center gap-2.5">
-        <h2 className="text-lg font-bold text-text sm:text-xl">{title}</h2>
+        <h2 className="text-xl font-bold tracking-tight text-text sm:text-2xl">{title}</h2>
         {note && <span className="chip chip-neutral">{note}</span>}
       </div>
       {action && (
@@ -298,8 +303,8 @@ function TickerCard({ match, venue, now }: { match: Match; venue?: Venue; now: n
   const started = match.kickoff <= now;
 
   return (
-    <div className="card-2 w-64 shrink-0 px-4 py-3">
-      <p className="truncate text-[10px] uppercase tracking-[0.12em] text-text-dim">
+    <div className="card-2 w-72 shrink-0 px-4 py-3.5">
+      <p className="truncate text-[10px] uppercase tracking-[0.14em] text-brand">
         {venue ? venueCity(venue, locale) : ""} · {matchStage(match, locale)}
       </p>
       <p className="mt-1.5 flex items-center gap-1.5 text-sm font-bold text-text">
