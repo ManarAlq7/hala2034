@@ -81,9 +81,9 @@ const toEvent = (row: EventRow): MatchEvent => ({
 });
 
 export const eventPlayer = (e: MatchEvent, locale: Locale) =>
-  (locale === "en" ? e.playerEn : e.playerAr) ?? "";
+  (locale === "ar" ? e.playerAr : e.playerEn) ?? "";
 export const eventDetail = (e: MatchEvent, locale: Locale) =>
-  (locale === "en" ? e.detailEn : e.detailAr) ?? "";
+  (locale === "ar" ? e.detailAr : e.detailEn) ?? "";
 
 /** الأحداث التي ترفع النتيجة — ملخّصة في مكان واحد فلا تُنسى واحدة عند الإضافة */
 const SCORING: EventKind[] = ["goal", "penalty"];

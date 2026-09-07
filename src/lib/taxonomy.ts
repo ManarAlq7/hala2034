@@ -9,7 +9,7 @@ import type { CategoryId, ChannelId, Locale, SeverityId, StatusId } from "./type
 /* -------------------------------------------------------------------------- */
 
 /** اختيار التسمية بلغة العرض */
-export const pick = (locale: Locale, ar: string, en: string) => (locale === "en" ? en : ar);
+export const pick = (locale: Locale, ar: string, en: string) => (locale === "ar" ? ar : en);
 
 export interface CategoryDef {
   id: CategoryId;

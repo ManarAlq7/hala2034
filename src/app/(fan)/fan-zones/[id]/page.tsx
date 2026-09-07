@@ -130,7 +130,7 @@ export default function FanZonePage() {
 
               return (
                 <div key={group}>
-                  <h3 className="label">{locale === "en" ? GROUP_LABEL[group].en : GROUP_LABEL[group].ar}</h3>
+                  <h3 className="label">{locale === "ar" ? GROUP_LABEL[group].ar : GROUP_LABEL[group].en}</h3>
                   <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {items.map((a) => (
                       <li key={a.key} className="card flex gap-3 p-4">

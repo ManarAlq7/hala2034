@@ -7,6 +7,7 @@ import type {
   SeverityId,
   TimelineEntry,
 } from "./types";
+import { contentLocale } from "./locales";
 import { ZONES, categoryById, pick, zoneLabel } from "./taxonomy";
 
 /* -------------------------------------------------------------------------- */
@@ -70,8 +71,9 @@ export const LANG_LABELS: Record<string, { ar: string; en: string }> = {
   fa: { ar: "الفارسية", en: "Persian" },
 };
 
+/** اسم اللغة بلغة المحتوى — الجدول بلغتين، فمن لا يقرأ العربية يأخذ الإنجليزية */
 export const langLabel = (code: string, locale: Locale = "ar") =>
-  LANG_LABELS[code]?.[locale] ?? code;
+  LANG_LABELS[code]?.[contentLocale(locale)] ?? code;
 
 /* ----------------------------- الأنواع الفرعية ----------------------------- */
 
@@ -513,7 +515,7 @@ export function clusterTitle(subtype: string, zoneId: string, locale: Locale = "
  */
 export function clusterHeading(cluster: Cluster, locale: Locale = "ar"): string {
   const summary = cluster.summary;
-  if (summary) return locale === "en" ? summary.titleEn : summary.titleAr;
+  if (summary) return locale === "ar" ? summary.titleAr : summary.titleEn;
   return clusterTitle(cluster.subtype, cluster.zoneId, locale);
 }
 

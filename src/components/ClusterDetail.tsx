@@ -136,12 +136,12 @@ export default function ClusterDetail({ cluster, reports, onClose }: Props) {
             {summary ? (
               <>
                 <p className="text-sm leading-relaxed text-text">
-                  {locale === "en" ? summary.summaryEn : summary.summaryAr}
+                  {locale === "ar" ? summary.summaryAr : summary.summaryEn}
                 </p>
-                {(locale === "en" ? summary.actionEn : summary.actionAr) && (
+                {(locale === "ar" ? summary.actionAr : summary.actionEn) && (
                   <p className="mt-3 rounded-lg border border-brand-dim bg-brand-wash px-3 py-2 text-xs leading-relaxed text-text">
                     <span className="font-bold text-brand">{t("detail.suggestedAction")}: </span>
-                    {locale === "en" ? summary.actionEn : summary.actionAr}
+                    {locale === "ar" ? summary.actionAr : summary.actionEn}
                   </p>
                 )}
                 <p className="nums mt-2.5 text-[11px] text-text-dim">

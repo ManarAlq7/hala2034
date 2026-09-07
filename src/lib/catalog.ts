@@ -84,25 +84,25 @@ export interface Booking {
 export const remaining = (tier: TicketTier) => Math.max(0, tier.capacity - tier.sold);
 
 export const venueName = (venue: Venue, locale: Locale) =>
-  locale === "en" ? venue.nameEn : venue.nameAr;
+  locale === "ar" ? venue.nameAr : venue.nameEn;
 export const venueCity = (venue: Venue, locale: Locale) =>
-  locale === "en" ? venue.cityEn : venue.cityAr;
+  locale === "ar" ? venue.cityAr : venue.cityEn;
 export const matchStage = (match: Match, locale: Locale) =>
-  locale === "en" ? match.stageEn : match.stageAr;
+  locale === "ar" ? match.stageAr : match.stageEn;
 export const matchHome = (match: Match, locale: Locale) =>
-  locale === "en" ? match.homeEn : match.homeAr;
+  locale === "ar" ? match.homeAr : match.homeEn;
 export const matchAway = (match: Match, locale: Locale) =>
-  locale === "en" ? match.awayEn : match.awayAr;
+  locale === "ar" ? match.awayAr : match.awayEn;
 export const tierName = (tier: TicketTier, locale: Locale) =>
-  locale === "en" ? tier.nameEn : tier.nameAr;
+  locale === "ar" ? tier.nameAr : tier.nameEn;
 export const zoneName = (zone: FanZone, locale: Locale) =>
-  locale === "en" ? zone.nameEn : zone.nameAr;
+  locale === "ar" ? zone.nameAr : zone.nameEn;
 export const zoneCity = (zone: FanZone, locale: Locale) =>
-  locale === "en" ? zone.cityEn : zone.cityAr;
+  locale === "ar" ? zone.cityAr : zone.cityEn;
 export const zoneAbout = (zone: FanZone, locale: Locale) =>
-  locale === "en" ? zone.aboutEn : zone.aboutAr;
+  locale === "ar" ? zone.aboutAr : zone.aboutEn;
 export const zoneFeatures = (zone: FanZone, locale: Locale) =>
-  locale === "en" ? zone.featuresEn : zone.featuresAr;
+  locale === "ar" ? zone.featuresAr : zone.featuresEn;
 
 /* --------------------------------- القراءة --------------------------------- */
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import { DICTS, isLocale, localeDir } from "./locales";
 import { AR, EN, type StringKey } from "./strings";
 import type { Locale, TimelineEntry } from "./types";
 
@@ -26,7 +27,9 @@ const listeners = new Set<() => void>();
 function applyToDocument(locale: Locale) {
   const el = document.documentElement;
   el.lang = locale;
-  el.dir = locale === "en" ? "ltr" : "rtl";
+  // الاتجاه من سجل اللغات لا من مقارنة بالعربية: الأردية والفارسية تُكتبان
+  // من اليمين أيضاً، والمقارنة الثنائية كانت تعطيهما اتجاهاً مقلوباً.
+  el.dir = localeDir(locale);
 }
 
 export function setLocale(locale: Locale) {
@@ -49,7 +52,7 @@ function restore() {
   restored = true;
   try {
     const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (saved === "en" || saved === "ar") {
+    if (saved && isLocale(saved)) {
       if (saved !== current) {
         current = saved;
         for (const l of listeners) l();
@@ -79,8 +82,17 @@ const fill = (text: string, params?: Params) =>
     ? text.replace(/\{(\w+)\}/g, (m, key: string) => (key in params ? String(params[key]) : m))
     : text;
 
+/**
+ * نصّ المفتاح بلغة العرض.
+ *
+ * سلسلة الارتداد: لغة المستخدم، ثم الإنجليزية. لغةٌ لم تُترجَم بعد تعرض
+ * الإنجليزية لا فراغاً — فتُضاف اللغات تدريجياً بلا أن تُكسر الصفحة، وهذا
+ * أصدق من نصّ عربي يظهر لقارئ ياباني.
+ */
 export function translate(locale: Locale, key: StringKey, params?: Params): string {
-  return fill(locale === "en" ? EN[key] : AR[key], params);
+  if (locale === "ar") return fill(AR[key], params);
+  const dict = DICTS[locale];
+  return fill(dict?.[key] ?? EN[key], params);
 }
 
 export type Translator = (key: StringKey, params?: Params) => string;
@@ -102,12 +114,16 @@ export function useLocale(): UseLocale {
     restore();
   }, []);
 
+  const dir = localeDir(locale);
+
   return {
     locale,
-    dir: locale === "en" ? "ltr" : "rtl",
-    isRtl: locale !== "en",
+    dir,
+    isRtl: dir === "rtl",
     setLocale,
-    toggle: () => setLocale(locale === "en" ? "ar" : "en"),
+    // التبديل السريع يبقى للكونسول: فريقٌ واحد معروف يعمل بلغتين، أما الجمهور
+    // فيختار من قائمة — التبديل بين اثنتين لا يخدم قادماً من ثمانين بلداً.
+    toggle: () => setLocale(locale === "ar" ? "en" : "ar"),
     t: (key, params) => translate(locale, key, params),
   };
 }
@@ -140,7 +156,7 @@ export function reportText(
   report: { text: string; textAr?: string; textEn?: string },
   locale: Locale,
 ): string {
-  return (locale === "en" ? report.textEn : report.textAr) ?? report.text;
+  return (locale === "ar" ? report.textAr : report.textEn) ?? report.text;
 }
 
 /** هل يختلف المعروض عن الأصل؟ أي: هل هناك ترجمة فعلية تستحق إظهار الأصل معها */

@@ -38,7 +38,7 @@ function relativeEn(min: number): string {
 /** صياغة الوقت النسبي بلغة العرض */
 export function relativeTime(ts: number, locale: Locale = "ar", now: number = Date.now()): string {
   const min = Math.floor(Math.max(0, now - ts) / 60000);
-  return locale === "en" ? relativeEn(min) : relativeAr(min);
+  return locale === "ar" ? relativeAr(min) : relativeEn(min);
 }
 
 /** الوقت بصيغة ٢٤ ساعة */
@@ -71,15 +71,29 @@ export function formatMinutes(min: number | null, locale: Locale = "ar"): string
 /*  تُصيّر بالهجري والأرقام العربية، وجدول مباريات دولي يُقرأ بالميلادي.           */
 /* -------------------------------------------------------------------------- */
 
-const DATE_LOCALE: Record<Locale, string> = {
+const DATE_LOCALE: Partial<Record<Locale, string>> = {
   ar: "ar-u-ca-gregory-nu-latn",
   en: "en-GB",
+  es: "es-ES",
+  fr: "fr-FR",
+  pt: "pt-PT",
+  de: "de-DE",
+  it: "it-IT",
+  tr: "tr-TR",
+  ja: "ja-JP",
+  ko: "ko-KR",
+  zh: "zh-CN",
+  ur: "ur-PK-u-ca-gregory-nu-latn",
+  fa: "fa-IR-u-ca-gregory-nu-latn",
 };
+
+/** وسم التنسيق للغة، وللغة بلا وسم يُستعمل الإنجليزي */
+const dateTag = (locale: Locale) => DATE_LOCALE[locale] ?? "en-GB";
 
 /** اليوم والشهر ووقت الانطلاق، مثل: السبت ١٤ نوفمبر · 19:00 */
 export function matchDateTime(ts: number, locale: Locale = "ar"): string {
   const d = new Date(ts);
-  const day = new Intl.DateTimeFormat(DATE_LOCALE[locale], {
+  const day = new Intl.DateTimeFormat(dateTag(locale), {
     weekday: "short",
     day: "numeric",
     month: "short",
@@ -89,7 +103,7 @@ export function matchDateTime(ts: number, locale: Locale = "ar"): string {
 
 /** التاريخ وحده بلا وقت */
 export function matchDate(ts: number, locale: Locale = "ar"): string {
-  return new Intl.DateTimeFormat(DATE_LOCALE[locale], {
+  return new Intl.DateTimeFormat(dateTag(locale), {
     day: "numeric",
     month: "long",
     year: "numeric",

@@ -238,8 +238,8 @@ const BY_KEY = new Map(AMENITIES.map((a) => [a.key, a]));
 
 export const amenityByKey = (key: string): Amenity | undefined => BY_KEY.get(key);
 
-export const amenityName = (a: Amenity, locale: Locale) => (locale === "en" ? a.en : a.ar);
-export const amenityNote = (a: Amenity, locale: Locale) => (locale === "en" ? a.noteEn : a.noteAr);
+export const amenityName = (a: Amenity, locale: Locale) => (locale === "ar" ? a.ar : a.en);
+export const amenityNote = (a: Amenity, locale: Locale) => (locale === "ar" ? a.noteAr : a.noteEn);
 
 /** مزايا المنطقة مرتّبةً بترتيب الفهرس أعلاه، لا بترتيب ما ورد من القاعدة */
 export function zoneAmenities(zone: FanZone): Amenity[] {

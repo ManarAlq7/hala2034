@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import LanguagePicker from "@/components/fan/LanguagePicker";
 import { IconClose, IconMenu } from "@/components/ops/Icons";
 import { useAccount } from "@/lib/account";
 import { useLocale } from "@/lib/i18n";
@@ -23,7 +24,7 @@ const NAV: { href: string; key: StringKey }[] = [
  * لا في الترويسة: هو مدخل موظّفين، ووجوده بين روابط المشجّع يوحي بأنه وجهة له.
  */
 export default function FanShell({ children }: { children: React.ReactNode }) {
-  const { t, toggle, isRtl } = useLocale();
+  const { t, isRtl } = useLocale();
   const { status } = useAccount();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -71,9 +72,7 @@ export default function FanShell({ children }: { children: React.ReactNode }) {
             >
               {status === "signedIn" ? t("nav.account") : t("nav.signIn")}
             </Link>
-            <button onClick={toggle} className="btn btn-ghost btn-sm" aria-label={t("header.switchLangAria")}>
-              {t("header.switchLang")}
-            </button>
+            <LanguagePicker />
             <button
               onClick={() => setOpen((v) => !v)}
               className="btn btn-ghost btn-sm md:hidden"

@@ -213,7 +213,7 @@ function LineupCard({ title, lineup }: { title: string; lineup: Lineup | null })
         {lineup.players.map((p) => (
           <li key={p.n} className="flex items-baseline gap-2.5 text-sm">
             <span className="nums w-6 shrink-0 text-end font-bold text-text-dim">{p.n}</span>
-            <span className="flex-1 text-text">{locale === "en" ? p.en : p.ar}</span>
+            <span className="flex-1 text-text">{locale === "ar" ? p.ar : p.en}</span>
             <span className="chip chip-neutral text-[10px]">{p.pos}</span>
           </li>
         ))}

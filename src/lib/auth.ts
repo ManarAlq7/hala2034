@@ -53,10 +53,10 @@ function toUser(session: Session): OpsUser {
 }
 
 export const userName = (user: OpsUser, locale: Locale) =>
-  locale === "en" ? user.name : user.nameAr;
+  locale === "ar" ? user.nameAr : user.name;
 
 export const userRole = (user: OpsUser, locale: Locale) =>
-  locale === "en" ? user.role : user.roleAr;
+  locale === "ar" ? user.roleAr : user.role;
 
 export interface UseSession {
   status: SessionStatus;
