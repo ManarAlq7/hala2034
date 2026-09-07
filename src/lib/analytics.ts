@@ -46,10 +46,20 @@ export function timeSeries(
 export interface SlaMetrics {
   /** متوسط الدقائق حتى أول إجراء */
   avgResponseMin: number | null;
+  /**
+   * وسيط الدقائق حتى أول إجراء.
+   *
+   * المتوسط وحده يكذب هنا: مشكلة واحدة نُسيت ليلة كاملة ترفعه فيبدو الأداء
+   * سيئاً وهو جيّد، أو العكس. الوسيط يقول ما يحدث فعلاً في الحالة المعتادة،
+   * والاثنان معاً يكشفان وجود التطرّف من عدمه.
+   */
+  medianResponseMin: number | null;
   /** متوسط الدقائق حتى الإغلاق */
   avgResolveMin: number | null;
   /** نسبة المشكلات المغلقة من الإجمالي */
   resolvedRate: number;
+  /** نسبة ما استُجيب له داخل مهلته المستهدفة */
+  withinTargetRate: number | null;
   /** عدد المشكلات المفتوحة التي تجاوزت المهلة دون أي إجراء */
   breached: number;
 }
@@ -69,6 +79,23 @@ export function slaMetrics(clusters: Cluster[], now: number): SlaMetrics {
   const avg = (xs: number[]) =>
     xs.length ? Math.round(xs.reduce((a, b) => a + b, 0) / xs.length) : null;
 
+  const median = (xs: number[]) => {
+    if (!xs.length) return null;
+    const sorted = [...xs].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return Math.round(
+      sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid],
+    );
+  };
+
+  const responseMinutes = responded.map((c) => (c.firstActionAt! - c.firstSeen) / 60000);
+
+  /* الالتزام يُقاس على ما استُجيب له فعلاً: ما لم يُستجب له بعدُ يُحسب في «تجاوز المهلة» */
+  const onTime = responded.filter(
+    (c) =>
+      (c.firstActionAt! - c.firstSeen) / 60000 <= (RESPONSE_TARGET_MIN[c.severity] ?? 60),
+  ).length;
+
   const breached = clusters.filter((c) => {
     if (c.status === "resolved" || c.firstActionAt) return false;
     const target = RESPONSE_TARGET_MIN[c.severity] ?? 60;
@@ -76,9 +103,11 @@ export function slaMetrics(clusters: Cluster[], now: number): SlaMetrics {
   }).length;
 
   return {
-    avgResponseMin: avg(responded.map((c) => (c.firstActionAt! - c.firstSeen) / 60000)),
+    avgResponseMin: avg(responseMinutes),
+    medianResponseMin: median(responseMinutes),
     avgResolveMin: avg(resolved.map((c) => (c.resolvedAt! - c.firstSeen) / 60000)),
     resolvedRate: clusters.length ? resolved.length / clusters.length : 0,
+    withinTargetRate: responded.length ? onTime / responded.length : null,
     breached,
   };
 }

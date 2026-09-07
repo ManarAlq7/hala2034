@@ -1,4 +1,4 @@
-import { absorbReport, findOrCreateCluster } from "./ai";
+import { CLUSTER_WINDOW_MS, findOrCreateCluster } from "./ai";
 import { supabase } from "./supabase";
 import type {
   CategoryId,
@@ -57,6 +57,7 @@ interface ReportRow {
   confidence: number;
   keywords: string[] | null;
   reporter_name: string | null;
+  track_code: string | null;
   created_at: string;
 }
 
@@ -98,23 +99,7 @@ const toReport = (row: ReportRow): Report => ({
   createdAt: ms(row.created_at),
   clusterId: row.cluster_id,
   reporterName: row.reporter_name ?? undefined,
-});
-
-/** صف مشكلة جاهز للإدراج — بلا `id` فقاعدة البيانات هي التي ترقّم */
-const clusterInsert = (c: Cluster) => ({
-  title: c.title,
-  subtype: c.subtype,
-  category: c.category,
-  zone_id: c.zoneId,
-  severity: c.severity,
-  status: c.status,
-  first_seen: iso(c.firstSeen),
-  last_seen: iso(c.lastSeen),
-  assigned_to: c.assignedTo,
-  first_action_at: c.firstActionAt ? iso(c.firstActionAt) : null,
-  resolved_at: c.resolvedAt ? iso(c.resolvedAt) : null,
-  timeline: c.timeline,
-  summary: c.summary ?? null,
+  trackCode: row.track_code ?? undefined,
 });
 
 /* --------------------------------- القراءة --------------------------------- */
@@ -134,9 +119,15 @@ export async function fetchState(): Promise<DbState> {
   ]);
 
   if (clusterRes.error) throw clusterRes.error;
-  if (reportRes.error) throw reportRes.error;
 
-  const reports = (reportRes.data as ReportRow[]).map(toReport);
+  /*
+   * البلاغات مقصورة على فريق العمليات وعلى صاحبها. المشجّع الذي يفتح الصفحة
+   * يُردّ بلا شيء، وهذا ليس عطلاً: المشكلات وحدها هي ما يحتاجه، فلا يُرفع خطأ
+   * ولا تُعطَّل الصفحة لأجل ما لا يحقّ له أصلاً.
+   */
+  if (reportRes.error && reportRes.error.code !== "42501") throw reportRes.error;
+
+  const reports = ((reportRes.data ?? []) as ReportRow[]).map(toReport);
 
   // البلاغات مرتّبة بالأحدث أولاً، أما معرّفاتها داخل كل مشكلة فبالأقدم أولاً،
   // لأن السجل الزمني والملخّص يُقرآن بترتيب وقوع الأحداث
@@ -186,49 +177,15 @@ export async function submitToDb(
   const db = supabase();
   const at = input.at ?? Date.now();
 
-  const { data: openRows, error: openErr } = await db
-    .from("clusters")
-    .select("*")
-    .eq("subtype", classification.subtype)
-    .eq("zone_id", classification.zoneId)
-    .neq("status", "resolved")
-    .order("last_seen", { ascending: false });
-  if (openErr) throw openErr;
-
-  const open = (openRows as ClusterRow[]).map((row) => toCluster(row, []));
-  const { cluster: matched, isNew } = findOrCreateCluster(open, classification, at, "new");
-
-  let clusterId = matched.id;
-  let reportCount = 1;
-
-  if (isNew) {
-    const { data, error } = await db
-      .from("clusters")
-      .insert(clusterInsert(matched))
-      .select("id")
-      .single();
-    if (error) throw error;
-    clusterId = (data as { id: string }).id;
-  } else {
-    const { count, error } = await db
-      .from("reports")
-      .select("id", { count: "exact", head: true })
-      .eq("cluster_id", clusterId);
-    if (error) throw error;
-    reportCount = (count ?? 0) + 1;
-  }
-
   /*
-   * البلاغ يُوسم بصاحبه إن كان مسجّلاً كي يجده في حسابه، ويبقى مجهولاً إن لم
-   * يكن. سياسة الإدراج ترفض أي معرّف غير معرّف صاحب الجلسة، فالوسم لا يُنتحل.
+   * المشكلة المقترحة تُحسب هنا لا في القاعدة: العنوان والجهة المسؤولة يأتيان
+   * من تصنيف الأنواع في `taxonomy`، ونسخُه إلى SQL يعني نسختين تفترقان.
+   * القاعدة تأخذ هذا الاقتراح ولا تستعمله إلا إن لم تجد مشكلة مفتوحة مطابقة.
    */
-  const { data: auth } = await db.auth.getUser();
+  const { cluster: proposed } = findOrCreateCluster([], classification, at, "new");
 
-  const { data: reportRow, error: reportErr } = await db
-    .from("reports")
-    .insert({
-      user_id: auth.user?.id ?? null,
-      cluster_id: clusterId,
+  const { data, error } = await db.rpc("submit_report", {
+    p_report: {
       text: input.text,
       text_ar: classification.textAr ?? null,
       text_en: classification.textEn ?? null,
@@ -243,25 +200,51 @@ export async function submitToDb(
       keywords: classification.keywords,
       reporter_name: input.reporterName ?? null,
       created_at: iso(at),
-    })
-    .select("*")
-    .single();
-  if (reportErr) throw reportErr;
+    },
+    p_new_cluster: { title: proposed.title, assigned_to: proposed.assignedTo },
+    p_window_ms: CLUSTER_WINDOW_MS,
+  });
+  if (error) throw error;
 
-  const { severity, timeline } = absorbReport(matched, classification, reportCount, at, isNew);
+  const payload = data as {
+    report: ReportRow;
+    cluster: ClusterRow;
+    is_new: boolean;
+    report_count: number;
+  };
 
-  const { data: updatedRow, error: updateErr } = await db
-    .from("clusters")
-    .update({ last_seen: iso(at), severity, timeline })
-    .eq("id", clusterId)
-    .select("*")
-    .single();
-  if (updateErr) throw updateErr;
+  const report = toReport(payload.report);
+  const cluster = toCluster(payload.cluster, [report.id]);
 
-  const report = toReport(reportRow as ReportRow);
-  const cluster = toCluster(updatedRow as ClusterRow, [report.id]);
+  return {
+    report,
+    cluster,
+    isNewCluster: payload.is_new,
+    similarCount: payload.report_count,
+  };
+}
 
-  return { report, cluster, isNewCluster: isNew, similarCount: reportCount };
+/**
+ * تتبّع بلاغ برمزه.
+ *
+ * لم يعد المتصفح يقرأ جدول البلاغات، فالتتبّع يمرّ بدالّة تُرجع بلاغاً واحداً
+ * ومشكلته. والبحث بالرمز العشوائي لا بالمعرّف المتسلسل: عدّ الأرقام من واحد
+ * إلى ألف ليس اكتشافاً يُكافأ عليه أحد.
+ */
+export async function trackInDb(
+  code: string,
+): Promise<{ report: Report; cluster: Cluster; siblingCount: number } | null> {
+  const { data, error } = await supabase().rpc("track_report", { p_code: code });
+  if (error) throw error;
+  if (!data) return null;
+
+  const payload = data as { report: ReportRow; cluster: ClusterRow; report_count: number };
+  const report = toReport(payload.report);
+  return {
+    report,
+    cluster: toCluster(payload.cluster, [report.id]),
+    siblingCount: payload.report_count,
+  };
 }
 
 /** قراءة المشكلة قبل الإضافة إلى سجلّها — السجل يُلحق به ولا يُستبدل */
@@ -332,53 +315,53 @@ export async function isEmpty(): Promise<boolean> {
  * بالمعرّفات الجديدة — فمعرّفات البناء المحلي لا تعبر إلى قاعدة البيانات.
  */
 export async function seedDb(state: DbState): Promise<void> {
-  const db = supabase();
-  if (state.clusters.length === 0) return;
-
-  const { data, error } = await db
-    .from("clusters")
-    .insert(state.clusters.map(clusterInsert))
-    .select("id");
-  if (error) throw error;
-
-  const newIds = (data as { id: string }[]).map((r) => r.id);
-  const idByLocal = new Map(state.clusters.map((c, i) => [c.id, newIds[i]]));
-
-  const rows = state.reports
-    .map((r) => {
-      const clusterId = idByLocal.get(r.clusterId);
-      if (!clusterId) return null;
-      return {
-        cluster_id: clusterId,
-        text: r.text,
-        text_ar: r.textAr ?? null,
-        text_en: r.textEn ?? null,
-        subtype: r.subtype,
-        lang: r.lang,
-        channel: r.channel,
-        source: r.source,
-        zone_id: r.zoneId,
-        category: r.category,
-        severity: r.severity,
-        confidence: r.confidence,
-        keywords: r.keywords,
-        reporter_name: r.reporterName ?? null,
-        created_at: iso(r.createdAt),
-      };
-    })
-    .filter((row): row is NonNullable<typeof row> => row !== null);
-
-  if (rows.length > 0) {
-    const { error: reportErr } = await db.from("reports").insert(rows);
-    if (reportErr) throw reportErr;
-  }
+  await resetDb(state);
 }
 
-/** مسح كل شيء ثم إعادة البذر — البلاغات تُحذف مع مشكلاتها بحكم المفتاح الأجنبي */
+/**
+ * مسح كل شيء ثم إعادة البذر.
+ *
+ * كانت تكتب على الجدولين مباشرة، وقد سُحبت تلك الصلاحية من المتصفح حين أُغلق
+ * الإرسال في ممرّ واحد. فالعملية كلها الآن دالّة محروسة: تحذف وتُدرج داخل
+ * معاملة واحدة، وترفض من ليس في فريق العمليات.
+ */
 export async function resetDb(state: DbState): Promise<void> {
-  const { error } = await supabase().from("clusters").delete().neq("id", "");
+  const { error } = await supabase().rpc("ops_replace_state", {
+    p_clusters: state.clusters.map((c) => ({
+      id: c.id,
+      title: c.title,
+      subtype: c.subtype,
+      category: c.category,
+      zone_id: c.zoneId,
+      severity: c.severity,
+      status: c.status,
+      first_seen: iso(c.firstSeen),
+      last_seen: iso(c.lastSeen),
+      assigned_to: c.assignedTo,
+      first_action_at: c.firstActionAt ? iso(c.firstActionAt) : null,
+      resolved_at: c.resolvedAt ? iso(c.resolvedAt) : null,
+      timeline: c.timeline,
+      summary: c.summary ?? null,
+    })),
+    p_reports: state.reports.map((r) => ({
+      cluster_id: r.clusterId,
+      text: r.text,
+      text_ar: r.textAr ?? null,
+      text_en: r.textEn ?? null,
+      subtype: r.subtype,
+      lang: r.lang,
+      channel: r.channel,
+      source: r.source,
+      zone_id: r.zoneId,
+      category: r.category,
+      severity: r.severity,
+      confidence: r.confidence,
+      keywords: r.keywords,
+      reporter_name: r.reporterName ?? null,
+      created_at: iso(r.createdAt),
+    })),
+  });
   if (error) throw error;
-  await seedDb(state);
 }
 
 /* ------------------------------- البث اللحظي ------------------------------- */

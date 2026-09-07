@@ -1,13 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import VoiceInput from "@/components/VoiceInput";
 import { ZONES, categoryOwner, zoneLabel, zoneVenue } from "@/lib/taxonomy";
 import { langLabel, subtypeLabel } from "@/lib/ai";
 import { useLocale } from "@/lib/i18n";
-import { useApp, type SubmitResult } from "@/lib/store";
-import type { SourceId } from "@/lib/types";
+import { askNotifyPermission } from "@/lib/notify";
+import { queueReport, useFlushOnReconnect, useOutbox, type QueuedReport } from "@/lib/offline";
+import { useApp, submitReport, type SubmitResult } from "@/lib/store";
+import type { ChannelId, SourceId } from "@/lib/types";
 
 /** أمثلة بلغات مختلفة — مُدخلات لا نصوص واجهة، فتبقى كما هي في اللغتين */
 const EXAMPLES = [
@@ -25,7 +27,26 @@ export default function FanReportPage() {
   const [zoneId, setZoneId] = useState(ZONES[1].id);
   const [source, setSource] = useState<SourceId>("text");
   const [result, setResult] = useState<SubmitResult | null>(null);
+  const [queued, setQueued] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [sending, setSending] = useState(false);
+
+  const { online, pending } = useOutbox();
+
+  /* ما حُفظ أثناء الانقطاع يُرسَل وحده حين تعود الشبكة */
+  const sendQueued = useCallback(
+    (item: QueuedReport) =>
+      submitReport({
+        text: item.text,
+        zoneId: item.zoneId,
+        channel: item.channel as ChannelId,
+        source: item.source as SourceId,
+        reporterName: item.reporterName,
+        at: item.at,
+      }),
+    [],
+  );
+  useFlushOnReconnect(sendQueued);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,8 +54,19 @@ export default function FanReportPage() {
     if (clean.length < 4 || sending) return;
 
     setSending(true);
+    setFailed(false);
     try {
-      setResult(await submit({ text: clean, zoneId, channel: "web", source }));
+      const saved = await submit({ text: clean, zoneId, channel: "web", source });
+      setResult(saved);
+      // الإذن يُطلب الآن لا عند فتح الصفحة: صار للإشعار معنى يُشرح
+      void askNotifyPermission();
+    } catch {
+      /*
+       * الفشل هنا ليس نهاية البلاغ. الشبكة تسقط في الملعب تحديداً وقت الحاجة،
+       * فيُحفظ ما كُتب في الجهاز ويُرسَل حين تعود — بوقت كتابته لا بوقت وصوله.
+       */
+      queueReport({ text: clean, zoneId, channel: "web", source, at: Date.now() });
+      setQueued(true);
     } finally {
       setSending(false);
     }
@@ -42,6 +74,8 @@ export default function FanReportPage() {
 
   const reset = () => {
     setResult(null);
+    setQueued(false);
+    setFailed(false);
     setText("");
     setSource("text");
     setMode("text");
@@ -51,12 +85,26 @@ export default function FanReportPage() {
     return <Confirmation result={result} onAnother={reset} />;
   }
 
+  if (queued) {
+    return <Queued onAnother={reset} />;
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
       <div className="mb-8">
         <h1 className="text-2xl font-bold leading-snug text-text sm:text-3xl">{t("fan.tagline")}</h1>
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-text-muted">{t("fan.blurb")}</p>
       </div>
+
+      {/* الحالة تُقال قبل أن يكتب، لا بعد أن يضغط ويفشل */}
+      {(!online || pending > 0) && (
+        <p
+          role="status"
+          className="mb-4 rounded-xl border border-warn/30 bg-warn-wash px-4 py-3 text-[13px] leading-relaxed text-warn"
+        >
+          {!online ? t("report.offline") : t("report.pending", { n: pending })}
+        </p>
+      )}
 
       <form onSubmit={onSubmit} className="card space-y-6 p-5 sm:p-6">
         {/* اختيار طريقة الإدخال */}
@@ -140,14 +188,46 @@ export default function FanReportPage() {
           <p className="mt-1.5 text-[11px] text-text-dim">{t("report.zoneHint")}</p>
         </div>
 
+        {failed && (
+          <p role="alert" className="rounded-lg bg-danger-wash px-3 py-2 text-[13px] text-danger">
+            {t("report.failed")}
+          </p>
+        )}
+
+        {/* لا يُعطَّل الزرّ بانقطاع الشبكة: البلاغ يُحفظ ويُرسل لاحقاً */}
         <button
           type="submit"
-          disabled={!ready || sending || text.trim().length < 4}
+          disabled={(!ready && online) || sending || text.trim().length < 4}
           className="btn btn-primary w-full py-3"
         >
-          {sending ? t("report.sending") : t("report.submit")}
+          {sending ? t("report.sending") : online ? t("report.submit") : t("report.submitOffline")}
         </button>
       </form>
+    </div>
+  );
+}
+
+/* --------------------------- حُفظ حتى تعود الشبكة --------------------------- */
+
+function Queued({ onAnother }: { onAnother: () => void }) {
+  const { t } = useLocale();
+
+  return (
+    <div className="rise mx-auto max-w-3xl px-5 py-10 sm:py-14">
+      <div className="card overflow-hidden">
+        <div className="border-b border-line bg-warn-wash px-5 py-6 text-center sm:px-8">
+          <span className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-full bg-warn text-lg text-white">
+            ⇅
+          </span>
+          <h1 className="text-xl font-bold text-text">{t("report.queuedTitle")}</h1>
+        </div>
+        <div className="space-y-5 p-5 sm:p-8">
+          <p className="text-sm leading-relaxed text-text-muted">{t("report.queuedBody")}</p>
+          <button onClick={onAnother} className="btn btn-ghost w-full">
+            {t("fan.another")}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -170,7 +250,10 @@ function Confirmation({ result, onAnother }: { result: SubmitResult; onAnother: 
           <p className="mt-3 text-xs uppercase tracking-[0.14em] text-text-dim">
             {t("report.trackingNo")}
           </p>
-          <p className="nums mt-1 text-3xl font-bold tracking-tight text-brand">{report.id}</p>
+          {/* الرمز لا المعرّف: المعرّف متسلسل، وهذا وحده ما يفتح تفاصيل البلاغ */}
+          <p className="nums mt-1 text-3xl font-bold tracking-[0.14em] text-brand">
+            {report.trackCode ?? report.id}
+          </p>
         </div>
 
         <div className="space-y-5 p-5 sm:p-8">

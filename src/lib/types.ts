@@ -40,6 +40,13 @@ export interface Report {
   createdAt: number;
   clusterId: string;
   reporterName?: string;
+  /**
+   * رمز المتابعة الذي يُعطى للمبلّغ.
+   *
+   * ليس المعرّف: المعرّف متسلسل فمعرفته ليست سرّاً، وهذا عشوائي لأنه وحده ما
+   * يفتح تفاصيل البلاغ لصاحبه بعد أن أُغلق الجدول عن العامة.
+   */
+  trackCode?: string;
 }
 
 /**

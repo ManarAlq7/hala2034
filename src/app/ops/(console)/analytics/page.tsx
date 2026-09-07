@@ -76,9 +76,23 @@ export default function AnalyticsPage() {
       <PageHeader title={t("an.title")} subtitle={t("an.subtitle")} />
 
       <div className="space-y-6">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          {/* الوسيط قبل المتوسط: هو ما يحدث عادةً، والمتوسط بجانبه يكشف التطرّف */}
+          <StatCard
+            label={t("an.medianResponse")}
+            value={formatMinutes(sla.medianResponseMin, locale)}
+          />
           <StatCard label={t("an.avgResponse")} value={formatMinutes(sla.avgResponseMin, locale)} />
           <StatCard label={t("an.avgResolve")} value={formatMinutes(sla.avgResolveMin, locale)} />
+          <StatCard
+            label={t("an.withinTarget")}
+            value={
+              sla.withinTargetRate === null ? "—" : `${Math.round(sla.withinTargetRate * 100)}%`
+            }
+            tone={
+              sla.withinTargetRate !== null && sla.withinTargetRate < 0.8 ? "danger" : "ok"
+            }
+          />
           <StatCard
             label={t("an.resolvedRate")}
             value={`${Math.round(sla.resolvedRate * 100)}%`}

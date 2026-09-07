@@ -216,10 +216,15 @@ async function refreshFromDb() {
 }
 
 async function initFromDb() {
-  // البذر يقع مرة واحدة: أول زائر يجد القاعدة فارغة هو من يبنيها
+  // البذر يقع مرة واحدة، ومن فريق العمليات وحده: البذر كتابةٌ، والكتابة لم تعد
+  // متاحة للزائر. فإن رُفض، تُعرض القاعدة الفارغة كما هي بدل أن تتعطّل الصفحة.
   if (await isEmpty()) {
     const seed = buildInitialState(Date.now());
-    await seedDb({ reports: seed.reports, clusters: seed.clusters });
+    try {
+      await seedDb({ reports: seed.reports, clusters: seed.clusters });
+    } catch {
+      // ليس مشغّلاً — ينتظر من يبذر
+    }
   }
 
   await refreshFromDb();

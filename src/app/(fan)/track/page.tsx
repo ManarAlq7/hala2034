@@ -1,27 +1,80 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CategoryChip, SeverityBadge, StatusBadge } from "@/components/Badges";
 import { clusterHeading } from "@/lib/ai";
+import { trackInDb } from "@/lib/db";
 import { clockTime, relativeTime } from "@/lib/format";
 import { timelineText, useLocale } from "@/lib/i18n";
-import { useApp } from "@/lib/store";
+import { notifyStatus, useStatusWatch } from "@/lib/notify";
+import { hasSupabase } from "@/lib/supabase";
 import { categoryOwner, zoneLabel } from "@/lib/taxonomy";
+import type { Cluster, Report } from "@/lib/types";
 
 /**
- * تتبّع البلاغ: يدخل المبلّغ رقم المتابعة فيرى حالة بلاغه وما اتُّخذ بشأنه.
+ * تتبّع البلاغ: يدخل المبلّغ رمز المتابعة فيرى حالة بلاغه وما اتُّخذ بشأنه.
  * هذا يغلق الحلقة مع الجمهور بدل أن ينتهي البلاغ عند الإرسال.
+ *
+ * الصفحة لم تعد تقرأ جدول البلاغات — كانت تحمّله كاملاً إلى المتصفح لتبحث فيه،
+ * وهذا يعني أن كل زائر يملك أسماء المبلّغين ونصوصهم. صارت تسأل عن بلاغ واحد
+ * برمزه، والقاعدة هي التي تقرّر ماذا تُظهر.
  */
 export default function TrackPage() {
-  const { ready, reports, clusters } = useApp();
   const { t, locale, isRtl } = useLocale();
   const [query, setQuery] = useState("");
-  const [submitted, setSubmitted] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [found, setFound] = useState<{
+    report: Report;
+    cluster: Cluster;
+    siblingCount: number;
+  } | null>(null);
+  const [missing, setMissing] = useState(false);
+  const lastStatus = useRef<string | null>(null);
 
-  const ref = submitted?.trim().toUpperCase() ?? "";
-  const report = ref ? reports.find((r) => r.id.toUpperCase() === ref) : null;
-  const cluster = report ? clusters.find((c) => c.id === report.clusterId) : null;
+  const lookup = useCallback(
+    async (code: string): Promise<void> => {
+      const clean = code.trim();
+      if (clean.length < 4) return;
+
+      setBusy(true);
+      setMissing(false);
+      try {
+        const result = hasSupabase ? await trackInDb(clean) : null;
+        setFound(result);
+        setMissing(!result);
+        if (result) lastStatus.current = result.cluster.status;
+      } catch {
+        setFound(null);
+        setMissing(true);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [],
+  );
+
+  /* حين تتغيّر حالة مشكلته يعرف فوراً، بلا أن يعيد البحث */
+  const code = found?.report.trackCode ?? null;
+  const clusterId = found?.cluster.id ?? null;
+
+  const onClusterChange = useCallback(() => {
+    if (code) void lookup(code);
+  }, [code, lookup]);
+
+  useStatusWatch(clusterId, onClusterChange);
+
+  useEffect(() => {
+    const status = found?.cluster.status;
+    if (!status) return;
+    if (lastStatus.current && lastStatus.current !== status) {
+      notifyStatus(t("track.notifyTitle"), t(`track.notify.${status}` as never));
+    }
+    lastStatus.current = status;
+  }, [found?.cluster.status, t]);
+
+  const report = found?.report;
+  const cluster = found?.cluster;
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10 sm:py-14">
@@ -31,30 +84,30 @@ export default function TrackPage() {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          setSubmitted(query);
+          void lookup(query);
         }}
         className="card mt-6 flex flex-col gap-2 p-4 sm:flex-row"
       >
         <input
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => setQuery(e.target.value.toUpperCase())}
           placeholder={t("track.placeholder")}
           dir="ltr"
-          className="input flex-1 text-center"
+          className="input flex-1 text-center tracking-[0.2em]"
         />
         <button
           type="submit"
-          disabled={!ready || query.trim().length < 3}
+          disabled={busy || query.trim().length < 4}
           className="btn btn-primary sm:px-8"
         >
-          {t("track.search")}
+          {busy ? t("common.loading") : t("track.search")}
         </button>
       </form>
 
-      {submitted && !report && (
+      {missing && (
         <p className="card mt-4 p-8 text-center text-sm text-text-muted">
           {t("track.notFound")}{" "}
-          <Link href="/" className="font-semibold text-brand underline">
+          <Link href="/report" className="font-semibold text-brand underline">
             {t("track.newReport")}
           </Link>
           .
@@ -64,7 +117,7 @@ export default function TrackPage() {
       {report && cluster && (
         <div className="rise card mt-4 divide-y divide-line">
           <div className="p-5">
-            <p className="nums text-xs text-text-dim">{report.id}</p>
+            <p className="nums text-xs tracking-[0.16em] text-text-dim">{report.trackCode}</p>
             <p className="mt-1.5 text-sm leading-relaxed text-text">{report.text}</p>
             <p className="mt-2 text-[11px] text-text-dim">
               {t("track.sentAt")} {relativeTime(report.createdAt, locale)}
@@ -84,9 +137,9 @@ export default function TrackPage() {
             <span className="text-text">{clusterHeading(cluster, locale)}</span>
             {isRtl ? "»" : "”"} — {t("track.at")}{" "}
             <span className="font-semibold text-text">{categoryOwner(cluster.category, locale)}</span>
-            {cluster.reportIds.length === 1
+            {found.siblingCount <= 1
               ? t("track.onlyOne")
-              : t("track.withOthers", { n: cluster.reportIds.length - 1 })}
+              : t("track.withOthers", { n: found.siblingCount - 1 })}
           </div>
 
           <section className="p-5">

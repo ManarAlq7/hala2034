@@ -70,7 +70,7 @@ export const AR = {
   "report.emptyBody":
     "بعد الإرسال يعرض النظام اللغة المكتشفة، نوع المشكلة، درجة الخطورة، الموقع، والجهة المختصة — إضافة إلى ربط البلاغ ببلاغات مشابهة إن وُجدت.",
   "report.received": "تم استلام البلاغ",
-  "report.trackingNo": "رقم المتابعة",
+  "report.trackingNo": "رمز المتابعة",
   "report.keepIt": "احتفظ به لمتابعة الحالة من صفحة",
   "report.understood": "ما فهمه النظام",
   "report.accuracy": "دقة التصنيف",
@@ -87,10 +87,10 @@ export const AR = {
 
   /* ------------------------------ تتبّع بلاغ ------------------------------ */
   "track.title": "تتبّع بلاغ",
-  "track.subtitle": "أدخل رقم المتابعة الذي استلمته عند الإرسال لمعرفة حالة بلاغك والإجراء المتخذ.",
-  "track.placeholder": "مثال: R-0007",
+  "track.subtitle": "أدخل رمز المتابعة الذي استلمته عند الإرسال لمعرفة حالة بلاغك والإجراء المتخذ.",
+  "track.placeholder": "مثال: K7MP2XQ4RT",
   "track.search": "بحث",
-  "track.notFound": "لم نعثر على بلاغ بهذا الرقم. تأكد من الرقم، أو",
+  "track.notFound": "لم نعثر على بلاغ بهذا الرمز. تأكد منه، أو",
   "track.newReport": "قدّم بلاغاً جديداً",
   "track.sentAt": "أُرسل",
   "track.partOf": "بلاغك مُدرج ضمن المشكلة",
@@ -379,6 +379,22 @@ export const AR = {
   "fz.person": "شخص",
   "fz.empty": "لا توجد مناطق معروضة.",
 
+  "tk.scanHint": "اعرض هذا الرمز عند البوابة.",
+  "an.medianResponse": "وسيط الاستجابة",
+  "an.withinTarget": "داخل المهلة",
+
+  /* ------------------------- دون اتصال وإشعار الحالة ------------------------- */
+  "report.offline": "لا يوجد اتصال الآن. اكتب بلاغك على أي حال — يُحفظ في جهازك ويُرسَل وحده حين تعود الشبكة.",
+  "report.pending": "{n} بلاغ محفوظ في جهازك، ينتظر عودة الشبكة.",
+  "report.submitOffline": "احفظ البلاغ الآن",
+  "report.failed": "تعذّر الإرسال. حاول مرة أخرى.",
+  "report.queuedTitle": "حُفظ بلاغك",
+  "report.queuedBody": "الشبكة منقطعة، فالبلاغ محفوظ في جهازك بوقت كتابته لا بوقت إرساله. سيُرسَل وحده حين تعود الشبكة، ويصلك رمز المتابعة حينها.",
+  "track.notifyTitle": "تحديث على بلاغك",
+  "track.notify.new": "بلاغك مفتوح وينتظر الفريق المختص.",
+  "track.notify.in_progress": "الفريق بدأ العمل على بلاغك.",
+  "track.notify.resolved": "تم إغلاق بلاغك. شكراً لك.",
+
   /* ------------------------------- حساب المشجّع ------------------------------- */
   "nav.account": "حسابي",
   "nav.signIn": "تسجيل الدخول",
@@ -506,7 +522,7 @@ export const EN: Record<StringKey, string> = {
   "track.title": "Track a report",
   "track.subtitle":
     "Enter the reference you received when you filed the report to see its status and what has been done.",
-  "track.placeholder": "for example: R-0007",
+  "track.placeholder": "for example: K7MP2XQ4RT",
   "track.search": "Search",
   "track.notFound": "No report with that reference. Check the number, or",
   "track.newReport": "file a new report",
@@ -778,6 +794,20 @@ export const EN: Record<StringKey, string> = {
   "fz.capacity": "Holds",
   "fz.person": "people",
   "fz.empty": "No fan zones to show.",
+
+  "tk.scanHint": "Show this code at the gate.",
+  "an.medianResponse": "Median response",
+  "an.withinTarget": "Within target",
+  "report.offline": "You are offline. Write your report anyway — it is saved on your device and sent by itself when the network is back.",
+  "report.pending": "{n} report(s) saved on your device, waiting for the network.",
+  "report.submitOffline": "Save the report",
+  "report.failed": "Could not send. Please try again.",
+  "report.queuedTitle": "Your report is saved",
+  "report.queuedBody": "You are offline, so the report is saved on your device with the time you wrote it, not the time it is sent. It goes out by itself once the network returns, and your tracking code arrives then.",
+  "track.notifyTitle": "Update on your report",
+  "track.notify.new": "Your report is open and waiting for the right team.",
+  "track.notify.in_progress": "The team has started working on your report.",
+  "track.notify.resolved": "Your report has been closed. Thank you.",
 
   "nav.account": "My account",
   "nav.signIn": "Sign in",

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import TicketQr from "@/components/fan/TicketQr";
 import { useMemo, useState } from "react";
 import {
   bookTickets,
@@ -109,6 +110,12 @@ export default function TicketsPage() {
               {t("tk.reference")}
             </p>
             <p className="nums mt-1 text-3xl font-bold tracking-tight text-brand">{booking.id}</p>
+
+            {/* رمز قابل للمسح: التذكرة التي لا تُمسح عند البوابة ليست تذكرة */}
+            <div className="mt-5 flex justify-center">
+              <TicketQr value={booking.id} />
+            </div>
+            <p className="mt-3 text-[11px] text-text-dim">{t("tk.scanHint")}</p>
           </div>
 
           <dl className="divide-y divide-line">
