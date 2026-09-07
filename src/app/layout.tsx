@@ -16,6 +16,14 @@ export const metadata: Metadata = {
     "AI-powered fan experience operations for the FIFA World Cup 2034. Multilingual fan reports are translated, classified, grouped into single issues, and summarised for the operations team on a live console.",
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, title: "HALA 2034", statusBarStyle: "default" },
+  // آيفون يقرأ هذه لا أيقونات المانيفست
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {

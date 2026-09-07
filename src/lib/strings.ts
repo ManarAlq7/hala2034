@@ -442,6 +442,13 @@ export const AR = {
   "jr.opsTitle": "العمليات",
   "jr.opsBody": "تظهر المشكلة في غرفة العمليات مع خطورتها وموقعها والجهة المسؤولة.",
 
+  /* ------------------------------ تثبيت التطبيق ------------------------------ */
+  "install.title": "ثبّت هلا على جهازك",
+  "install.body": "يفتح بأيقونة مستقلة وبلا شريط متصفح، ويعمل حتى لو انقطعت الشبكة.",
+  "install.ios": "من زرّ المشاركة في سفاري، اختر «إضافة إلى الشاشة الرئيسية».",
+  "install.action": "تثبيت",
+  "install.later": "لاحقاً",
+
   "watch.title": "بثّ المباراة",
   "watch.commentary": "التعليق الحيّ",
   "watch.noStream": "حقوق بثّ المباريات مملوكة لجهات بعينها، ولا يُعرض هنا بثّ غير مصرّح به. حين يُضاف رابط رسمي يظهر في هذا المكان — وحتى ذلك الحين، التعليق الحيّ يجري بجانبه.",
@@ -930,6 +937,12 @@ export const EN: Record<StringKey, string> = {
   "jr.aiBody": "Translated and classified, then merged with similar reports into one issue.",
   "jr.opsTitle": "Operations",
   "jr.opsBody": "The issue appears in the operations room with its severity, location and owner.",
+
+  "install.title": "Install HALA on your device",
+  "install.body": "Opens with its own icon and no browser bar, and works even when the network drops.",
+  "install.ios": "In Safari, tap Share, then choose Add to Home Screen.",
+  "install.action": "Install",
+  "install.later": "Not now",
 
   "watch.title": "Match broadcast",
   "watch.commentary": "Live commentary",

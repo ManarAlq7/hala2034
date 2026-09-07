@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import GuideDock from "@/components/fan/GuideDock";
+import InstallPrompt from "@/components/fan/InstallPrompt";
 import LanguagePicker from "@/components/fan/LanguagePicker";
 import { IconClose, IconMenu } from "@/components/ops/Icons";
 import { useAccount } from "@/lib/account";
@@ -96,6 +97,7 @@ export default function FanShell({ children }: { children: React.ReactNode }) {
 
       {/* المرشد متاح من كل صفحة، ولا يفتح إلا بطلب */}
       <GuideDock />
+      <InstallPrompt />
 
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-5 py-5 text-xs text-text-dim sm:flex-row">
