@@ -85,9 +85,10 @@ export default function LandingPage() {
             <div className="ball-float">
               <Football
                 uid="hero"
-                className="h-72 w-72 text-text xl:h-80 xl:w-80"
-                patch="var(--text)"
-                seam="var(--line-strong)"
+                className="h-72 w-72 xl:h-80 xl:w-80"
+                patch="var(--brand)"
+                seam="var(--brand-dim)"
+                fill="var(--surface)"
                 spin
               />
             </div>

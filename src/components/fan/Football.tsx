@@ -44,12 +44,15 @@ export default function Football({
   /** لون البقعة — الافتراضي لون النصّ المحيط */
   patch = "currentColor",
   seam = "currentColor",
+  /** تعبئة القرص: تجعلها رسماً مسطّحاً بدل خطوط مفرّغة */
+  fill = "none",
   spin = false,
 }: {
   uid?: string;
   className?: string;
   patch?: string;
   seam?: string;
+  fill?: string;
   spin?: boolean;
 }) {
   return (
@@ -59,9 +62,15 @@ export default function Football({
       aria-hidden="true"
       data-ball={uid}
     >
-      <circle r={R} fill="none" stroke={seam} strokeWidth="6" />
+      {/*
+       * خطوط رفيعة لا عريضة.
+       *
+       * العرض السابق (٦) جعلها رسماً تقنياً ثقيلاً بجانب نصّ خفيف. الرسم
+       * البسيط يكون خفيفاً أيضاً، وإلا نافر ما وُضع ليخدمه.
+       */}
+      <circle r={R} fill={fill} stroke={seam} strokeWidth="3.5" />
 
-      <g stroke={seam} strokeWidth="6" strokeLinecap="round">
+      <g stroke={seam} strokeWidth="3.5" strokeLinecap="round">
         {SEAMS.map((s) => (
           <line key={s.a} x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} />
         ))}
