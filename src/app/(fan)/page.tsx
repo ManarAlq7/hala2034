@@ -119,7 +119,8 @@ export default function LandingPage() {
                 const left = countdown(m.kickoff, now, locale);
                 const started = m.kickoff <= now;
                 return (
-                  <li key={m.id} className="card card-link p-4">
+                  <li key={m.id}>
+                    <Link href={`/matches/${m.id}`} className="card card-link block h-full p-4">
                     <div className="flex items-center justify-between gap-2 text-[11px] text-text-dim">
                       <span>
                         {matchStage(m, locale)}
@@ -148,6 +149,7 @@ export default function LandingPage() {
                         )}
                       </span>
                     </div>
+                    </Link>
                   </li>
                 );
               })}
@@ -161,7 +163,8 @@ export default function LandingPage() {
             <SectionHead title={t("land.venues")} />
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {venues.map((v, i) => (
-                <li key={v.id} className="card overflow-hidden">
+                <li key={v.id}>
+                  <Link href={`/venues/${v.id}`} className="card card-link block h-full overflow-hidden">
                   {/* الرسم نفسه الذي ظهر في البوابة — كي تُعرف الملاعب حين تعود */}
                   <div className="aspect-[16/8] overflow-hidden border-b border-line bg-surface-3">
                     <StadiumArt
@@ -179,6 +182,7 @@ export default function LandingPage() {
                       {v.capacity.toLocaleString("en-US")} · {t("land.capacityApprox")}
                     </p>
                   </div>
+                  </Link>
                 </li>
               ))}
             </ul>

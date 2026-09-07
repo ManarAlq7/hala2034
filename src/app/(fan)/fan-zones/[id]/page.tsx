@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
 import { useMemo } from "react";
+import LocationCard from "@/components/fan/LocationCard";
 import ZoneArt, { zoneSceneFor } from "@/components/fan/ZoneArt";
 import {
   matchAway,
@@ -152,6 +153,18 @@ export default function FanZonePage() {
             })}
           </div>
         </section>
+
+        {/* -------------------------------- الموقع -------------------------------- */}
+        <LocationCard
+          lat={zone.lat}
+          lng={zone.lng}
+          label={zoneCity(zone, locale)}
+          precise={zone.precise}
+          uid={`zone-${zone.id}`}
+          others={zones
+            .filter((z) => z.id !== zone.id && z.lat !== null && z.lng !== null)
+            .map((z) => ({ id: z.id, lat: z.lat!, lng: z.lng!, label: zoneCity(z, locale) }))}
+        />
 
         {/* ---------------------------- مباريات المدينة ---------------------------- */}
         {cityMatches.length > 0 && (

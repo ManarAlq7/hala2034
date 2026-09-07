@@ -25,6 +25,7 @@ const NAV: { href: string; key: StringKey; Icon: (p: { className?: string }) => 
   { href: "/ops/map", key: "ops.map", Icon: IconMap },
   { href: "/ops/reports", key: "ops.reports", Icon: IconReports },
   { href: "/ops/analytics", key: "ops.analytics", Icon: IconAnalytics },
+  { href: "/ops/matchday", key: "nav.matchday", Icon: IconOverview },
   { href: "/ops/settings", key: "ops.settings", Icon: IconSettings },
 ];
 

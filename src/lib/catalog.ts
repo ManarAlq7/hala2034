@@ -20,6 +20,10 @@ export interface Venue {
   cityEn: string;
   /** السعة المعلنة تقديرية — تُعرض موسومة بذلك */
   capacity: number;
+  lat: number | null;
+  lng: number | null;
+  /** موقع فعليّ للمبنى، أم موقع المشروع لما لم يُبنَ بعد؟ */
+  precise: boolean;
 }
 
 export interface Match {
@@ -59,6 +63,9 @@ export interface FanZone {
   capacity: number;
   /** مفاتيح المزايا — الأسماء والأيقونات في lib/zones */
   amenities: string[];
+  lat: number | null;
+  lng: number | null;
+  precise: boolean;
   opensAt: string;
   closesAt: string;
   featuresAr: string[];
@@ -106,6 +113,9 @@ interface VenueRow {
   city_ar: string;
   city_en: string;
   capacity: number;
+  lat: number | null;
+  lng: number | null;
+  precise: boolean;
 }
 
 interface MatchRow {
@@ -147,6 +157,9 @@ interface ZoneRow {
   features_ar: string[] | null;
   features_en: string[] | null;
   amenities: string[] | null;
+  lat: number | null;
+  lng: number | null;
+  precise: boolean;
 }
 
 export interface Catalog {
@@ -179,6 +192,9 @@ export async function fetchCatalog(): Promise<Catalog> {
       cityAr: v.city_ar,
       cityEn: v.city_en,
       capacity: v.capacity,
+      lat: v.lat,
+      lng: v.lng,
+      precise: v.precise,
     })),
     matches: (matchRes.data as MatchRow[]).map((m) => ({
       id: m.id,
@@ -217,6 +233,9 @@ export async function fetchCatalog(): Promise<Catalog> {
       closesAt: z.closes_at,
       featuresAr: z.features_ar ?? [],
       featuresEn: z.features_en ?? [],
+      lat: z.lat,
+      lng: z.lng,
+      precise: z.precise,
     })),
   };
 }
