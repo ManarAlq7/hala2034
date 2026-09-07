@@ -430,6 +430,18 @@ export const AR = {
   "an.withinTarget": "داخل المهلة",
 
   /* -------------------------------- المرشد -------------------------------- */
+  /* ----------------------------- مسار المنصّة ----------------------------- */
+  "jr.title": "من ملاحظة مشجّع إلى إجراء في الملعب",
+  "jr.subtitle": "هذا ما يجري بين لحظة كتابة البلاغ ولحظة معالجته — في أقل من دقيقة.",
+  "jr.fanTitle": "المشجّع",
+  "jr.fanBody": "يكتب أو يقول ما رآه بلغته، من مقعده أو من الممرّ.",
+  "jr.reportTitle": "البلاغ",
+  "jr.reportBody": "يصل فوراً برمز متابعة، ويعمل حتى لو سقطت الشبكة.",
+  "jr.aiTitle": "الفهم والتجميع",
+  "jr.aiBody": "يُترجَم ويُصنَّف، ويُضمّ إلى البلاغات المتشابهة في مشكلة واحدة.",
+  "jr.opsTitle": "العمليات",
+  "jr.opsBody": "تظهر المشكلة في غرفة العمليات مع خطورتها وموقعها والجهة المسؤولة.",
+
   "watch.title": "بثّ المباراة",
   "watch.commentary": "التعليق الحيّ",
   "watch.noStream": "حقوق بثّ المباريات مملوكة لجهات بعينها، ولا يُعرض هنا بثّ غير مصرّح به. حين يُضاف رابط رسمي يظهر في هذا المكان — وحتى ذلك الحين، التعليق الحيّ يجري بجانبه.",
@@ -908,6 +920,17 @@ export const EN: Record<StringKey, string> = {
   "tk.scanHint": "Show this code at the gate.",
   "an.medianResponse": "Median response",
   "an.withinTarget": "Within target",
+  "jr.title": "From a remark in the stands to action on the ground",
+  "jr.subtitle": "What happens between writing a report and someone working on it — in under a minute.",
+  "jr.fanTitle": "The fan",
+  "jr.fanBody": "Writes or speaks what they saw, in their own language, from a seat or a concourse.",
+  "jr.reportTitle": "The report",
+  "jr.reportBody": "Arrives at once with a tracking code, and works even when the network drops.",
+  "jr.aiTitle": "Understanding",
+  "jr.aiBody": "Translated and classified, then merged with similar reports into one issue.",
+  "jr.opsTitle": "Operations",
+  "jr.opsBody": "The issue appears in the operations room with its severity, location and owner.",
+
   "watch.title": "Match broadcast",
   "watch.commentary": "Live commentary",
   "watch.noStream": "Broadcast rights belong to specific holders, and no unauthorised stream is shown here. When an official link is added it appears in this frame — until then, the live commentary runs beside it.",

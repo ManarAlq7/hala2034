@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
+import { Crowd, PlayerRunning, StadiumGate as GateArt, Ticket } from "@/components/art/Line";
 import Football from "@/components/fan/Football";
+import JourneyStrip from "@/components/fan/JourneyStrip";
 import StadiumArt, { sceneFor } from "@/components/fan/StadiumArt";
 import StadiumGate from "@/components/fan/StadiumGate";
 import {
@@ -49,7 +51,12 @@ export default function LandingPage() {
       <StadiumGate venues={venues} />
 
       {/* ------------------------------- الواجهة ------------------------------- */}
-      <section className="aura grid-lines border-b border-line">
+      <section className="aura grid-lines relative isolate overflow-hidden border-b border-line">
+        {/* لاعب يركض خلف الواجهة: هوية الكرة بلا أن تُقرأ صورةً تزاحم العنوان */}
+        <PlayerRunning
+          weight={3}
+          className="pointer-events-none absolute -bottom-10 -z-10 hidden h-[26rem] text-brand opacity-[0.06] md:block ltr:-left-16 rtl:-right-16"
+        />
         <div className="mx-auto grid max-w-5xl items-center gap-10 px-5 py-16 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:py-24">
           <div>
           <span className="chip chip-brand">{t("land.badge")}</span>
@@ -123,6 +130,9 @@ export default function LandingPage() {
         </section>
       )}
 
+      {/* ما يفعله المشروع، قبل تفاصيل ما يعرضه */}
+      <JourneyStrip />
+
       <div className="mx-auto max-w-5xl space-y-14 px-5 py-14">
         {status === "loading" && (
           <p className="py-10 text-center text-sm text-text-dim">{t("common.loading")}</p>
@@ -133,6 +143,7 @@ export default function LandingPage() {
           <section>
             <SectionHead
               title={t("land.upcoming")}
+              Art={Ticket}
               note={t("land.demoData")}
               action={{ href: "/tickets", label: t("land.viewAll") }}
             />
@@ -183,7 +194,7 @@ export default function LandingPage() {
         {/* ------------------------------- الملاعب ------------------------------- */}
         {venues.length > 0 && (
           <section>
-            <SectionHead title={t("land.venues")} />
+            <SectionHead title={t("land.venues")} Art={GateArt} />
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {venues.map((v, i) => (
                 <li key={v.id}>
@@ -217,6 +228,7 @@ export default function LandingPage() {
           <section>
             <SectionHead
               title={t("land.zones")}
+              Art={Crowd}
               action={{ href: "/fan-zones", label: t("land.viewAll") }}
             />
             <ul className="grid gap-3 sm:grid-cols-3">
@@ -292,14 +304,18 @@ function SectionHead({
   title,
   note,
   action,
+  Art,
 }: {
   title: string;
   note?: string;
   action?: { href: string; label: string };
+  /** رسم صغير يقول موضوع القسم قبل قراءة عنوانه */
+  Art?: (p: { className?: string; weight?: number }) => React.JSX.Element;
 }) {
   return (
     <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
       <div className="flex items-center gap-2.5">
+        {Art && <Art weight={5} className="h-7 w-7 shrink-0 text-brand" />}
         <h2 className="text-xl font-bold tracking-tight text-text sm:text-2xl">{title}</h2>
         {note && <span className="chip chip-neutral">{note}</span>}
       </div>
