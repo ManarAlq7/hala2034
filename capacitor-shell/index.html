@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>HALA 2034</title>
+    <style>
+      /*
+       * صفحة احتياطية داخل التطبيق.
+       *
+       * تظهر حين يتعذّر الوصول إلى الخادم. الشاشة البيضاء تجعل المستخدم يظنّ
+       * التطبيق معطوباً، وهذه تقول ما الذي يحدث فعلاً.
+       */
+      :root {
+        --bg: #f5f5f6;
+        --surface: #ffffff;
+        --text: #16161a;
+        --muted: #56565f;
+        --brand: #8a6a24;
+        --line: #e3e3e8;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 2rem 1.5rem;
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+        text-align: center;
+      }
+      .card {
+        width: 100%;
+        max-width: 22rem;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        padding: 2rem 1.5rem;
+      }
+      img { width: 68px; height: 68px; border-radius: 1rem; }
+      h1 { margin: 1.25rem 0 0; font-size: 1.05rem; }
+      p { margin: 0.75rem 0 0; font-size: 0.85rem; line-height: 1.7; color: var(--muted); }
+      .dot {
+        display: inline-block;
+        width: 7px; height: 7px;
+        margin-inline-end: 0.4rem;
+        border-radius: 999px;
+        background: var(--brand);
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+      @media (prefers-reduced-motion: reduce) { .dot { animation: none; } }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <img src="icon-192.png" alt="" />
+      <h1><span class="dot"></span>جارٍ الاتصال بخادم هلا</h1>
+      <p>
+        تأكّد أن الخادم يعمل وأن الجهاز على الشبكة نفسها، ثم أعد فتح التطبيق.
+      </p>
+    </div>
+  </body>
+</html>

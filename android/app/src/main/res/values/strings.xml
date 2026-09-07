@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HALA 2034</string>
+    <string name="title_activity_main">HALA 2034</string>
+    <string name="package_name">sa.hala2034.app</string>
+    <string name="custom_url_scheme">sa.hala2034.app</string>
+</resources>

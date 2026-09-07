@@ -48,3 +48,5 @@ next-env.d.ts
 
 # سجلات التشغيل المحلية (START-*.bat)
 logs/
+
+!.env.capacitor.example
