@@ -68,7 +68,7 @@ export default function VenuePage() {
 
       {/* رسم الملعب في إطاره: خلف النصّ كان يبتلعه، وهنا يُرى كاملاً */}
       <div className="mx-auto max-w-5xl px-5 pt-8">
-        <div className="aspect-[21/8] overflow-hidden rounded-2xl border border-line bg-surface-3">
+        <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-line bg-surface-3 sm:aspect-[21/8]">
           <StadiumArt scene={sceneFor(venue.id, index)} uid={`venue-${venue.id}`} className="h-full w-full" />
         </div>
       </div>

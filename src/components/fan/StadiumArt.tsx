@@ -890,6 +890,100 @@ const FORMS: Record<FormKind, (p: { uid: string; scene: StadiumScene }) => React
   highland: HighlandForm,
 };
 
+/* ------------------------- طبقة الأجواء المشتركة ------------------------- */
+
+/**
+ * ومضات كاميرات الجماهير: نقاط صغيرة على المدرّجات تلمع بتوقيت متفاوت.
+ * المواضع تُحسب من الفهرس لا من عشوائية، فيتطابق الخادم والمتصفح في الترطيب.
+ */
+const FLASHES = Array.from({ length: 30 }, (_, i) => {
+  const deg = (i * 137.5) % 360;
+  const t = 0.66 + (((i * 37) % 100) / 100) * 0.26;
+  return {
+    x: r2(CX + IRX * t * Math.cos(rad(deg))),
+    y: r2(ICY + 14 + IRY * t * 0.92 * Math.sin(rad(deg))),
+    r: r2(1.6 + ((i * 13) % 10) / 10),
+    delay: r2(((i * 53) % 40) / 10),
+  };
+});
+
+/** شعاع الألعاب النارية: قطر الانفجار وعدد الأشعّة */
+const burstPath = (x: number, y: number, rays: number, inner: number, outer: number) =>
+  Array.from({ length: rays }, (_, i) => {
+    const a = rad((i * 360) / rays);
+    return `M ${r2(x + inner * Math.cos(a))} ${r2(y + inner * Math.sin(a))} L ${r2(x + outer * Math.cos(a))} ${r2(y + outer * Math.sin(a))}`;
+  }).join(" ");
+
+const burstDots = (x: number, y: number, rays: number, outer: number) =>
+  Array.from({ length: rays }, (_, i) => {
+    const a = rad((i * 360) / rays);
+    return { x: r2(x + (outer + 7) * Math.cos(a)), y: r2(y + (outer + 7) * Math.sin(a)) };
+  });
+
+/** خلف الملعب: هالة السماء وأعمدة الضوء والألعاب النارية */
+function SkyShow({ uid, scene }: { uid: string; scene: StadiumScene }) {
+  const bursts = [
+    { x: 330, y: 230, color: scene.accent, delay: 0 },
+    { x: 1270, y: 190, color: scene.glow, delay: 2.1 },
+    { x: 800, y: 130, color: scene.light, delay: 4.2 },
+  ];
+
+  return (
+    <g aria-hidden="true">
+      {/* هالة واسعة تعلو الملعب كأن المدينة كلّها مضاءة */}
+      <ellipse cx={CX} cy={CY - 120} rx={900} ry={360} fill={`url(#glow-${uid})`} className="stadium-halo" />
+
+      {/* عمودا ضوء يخرجان من فتحة الملعب نحو السماء */}
+      <g className="stadium-shafts">
+        <path d={`M ${CX - 260} ${ICY} L ${CX - 120} 40 L ${CX + 120} 40 L ${CX + 260} ${ICY} Z`} fill={`url(#shaft-${uid})`} />
+      </g>
+
+      {bursts.map((b) => (
+        <g
+          key={b.x}
+          className="stadium-burst"
+          style={{ transformOrigin: `${b.x}px ${b.y}px`, animationDelay: `${b.delay}s` }}
+        >
+          <path d={burstPath(b.x, b.y, 16, 14, 64)} stroke={b.color} strokeWidth={2.4} strokeLinecap="round" fill="none" />
+          <path d={burstPath(b.x, b.y, 16, 74, 88)} stroke={b.color} strokeWidth={1.6} strokeLinecap="round" fill="none" opacity="0.6" />
+          {burstDots(b.x, b.y, 16, 88).map((d, i) => (
+            <circle key={i} cx={d.x} cy={d.y} r={2.6} fill={b.color} />
+          ))}
+        </g>
+      ))}
+    </g>
+  );
+}
+
+/** فوق الملعب: وهج الأرضية وومضات المدرّجات */
+function Atmosphere({ uid, scene }: { uid: string; scene: StadiumScene }) {
+  return (
+    <g aria-hidden="true">
+      <ellipse
+        cx={CX}
+        cy={ICY + 10}
+        rx={r2(IRX * 1.18)}
+        ry={r2(IRY * 1.5)}
+        fill={`url(#pitch-${uid})`}
+        className="stadium-bloom"
+      />
+      <g clipPath={`url(#bowl-${uid})`}>
+        {FLASHES.map((f, i) => (
+          <circle
+            key={i}
+            cx={f.x}
+            cy={f.y}
+            r={f.r}
+            fill={scene.light}
+            className="stadium-flash"
+            style={{ animationDelay: `${f.delay}s` }}
+          />
+        ))}
+      </g>
+    </g>
+  );
+}
+
 /* --------------------------------- المشهد --------------------------------- */
 
 export default function StadiumArt({
@@ -922,6 +1016,12 @@ export default function StadiumArt({
           <stop offset="60%" stopColor={scene.glow} stopOpacity="0.14" />
           <stop offset="100%" stopColor={scene.glow} stopOpacity="0" />
         </radialGradient>
+
+        {/* عمود الضوء: ساطع عند فتحة الملعب ويذوب في السماء */}
+        <linearGradient id={`shaft-${uid}`} x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0%" stopColor={scene.light} stopOpacity="0.38" />
+          <stop offset="100%" stopColor={scene.light} stopOpacity="0" />
+        </linearGradient>
 
         <linearGradient id={`beam-${uid}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={scene.light} stopOpacity="0.34" />
@@ -981,8 +1081,10 @@ export default function StadiumArt({
 
       {/* المجموعة كلّها تتقلّص على الشاشات الطويلة — انظر gate-scene في الأنماط */}
       <g className="gate-scene">
+        <SkyShow uid={uid} scene={scene} />
         <ellipse cx={CX} cy={CY - 20} rx={760} ry={420} fill={`url(#glow-${uid})`} />
         <Form uid={uid} scene={scene} />
+        <Atmosphere uid={uid} scene={scene} />
       </g>
 
       <rect y="640" width="1600" height="260" fill={`url(#haze-${uid})`} />

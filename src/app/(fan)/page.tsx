@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
+import HeroMap from "@/components/fan/HeroMap";
 import StadiumArt, { sceneFor } from "@/components/fan/StadiumArt";
 import StadiumGate from "@/components/fan/StadiumGate";
 import {
@@ -37,6 +37,16 @@ export default function LandingPage() {
   const venueById = useMemo(() => new Map(venues.map((v) => [v.id, v])), [venues]);
   const upcoming = useMemo(() => matches.slice(0, 8), [matches]);
   const cities = useMemo(() => new Set(venues.map((v) => v.cityEn)).size, [venues]);
+  const flags = useMemo(
+    () => [
+      ...new Set(
+        matches
+          .flatMap((m) => [m.homeFlag, m.awayFlag])
+          .filter((f) => /^\p{Regional_Indicator}{2}$/u.test(f)),
+      ),
+    ],
+    [matches],
+  );
 
   const seatsLeft = useMemo(
     () => tiers.reduce((total, tier) => total + remaining(tier), 0),
@@ -44,62 +54,82 @@ export default function LandingPage() {
   );
 
   return (
-    <div>
+    <div className="landing-bg">
       {/* البوابة تسبق كل شيء، وتنزاح عن الصفحة بعد أوّل تفاعل */}
       <StadiumGate venues={venues} />
 
       {/* ------------------------------- الواجهة ------------------------------- */}
-      <section className="aura grid-lines border-b border-line">
-        <div className="mx-auto grid max-w-5xl items-center gap-10 px-5 py-16 sm:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:py-24">
+      <section className="hero-night relative overflow-hidden border-b border-line text-[#2b1b4d]">
+        <div className="hero-night-lines" aria-hidden="true" />
+        {/* كثبان ثلاث طبقات تنزل بالأسفل */}
+        <svg
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-44 w-full"
+          viewBox="0 0 1440 180"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path d="M0 120 C220 60 420 150 700 100 C980 50 1200 130 1440 80 V180 H0 Z" fill="#ecd9b4" opacity="0.6" />
+          <path d="M0 150 C260 100 480 170 760 130 C1040 90 1240 160 1440 120 V180 H0 Z" fill="#e4cd9f" opacity="0.85" />
+          <path d="M0 172 C300 140 560 180 820 160 C1080 140 1260 176 1440 156 V180 H0 Z" fill="#f2e6d2" />
+        </svg>
+        <div className="relative mx-auto grid max-w-5xl items-center gap-10 px-5 py-14 sm:py-20 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
           <div>
-          <span className="chip chip-brand">{t("land.badge")}</span>
-          {/* الواجهة تحمل الصفحة: الحجم الصغير على شاشة عريضة يجعلها تبدو فارغة لا هادئة */}
-          <h1 className="mt-5 max-w-4xl text-[2.15rem] font-bold leading-[1.08] tracking-tight text-text sm:text-6xl lg:text-7xl">
-            {t("land.title")}
-          </h1>
-          <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-text-muted sm:text-lg">
-            {t("land.subtitle")}
-          </p>
+            <span className="chip border-[#2b1b4d]/25 bg-white/50 text-[#2b1b4d]">{t("land.badge")}</span>
+            <h1 className="mt-5 max-w-4xl text-[2.15rem] font-bold leading-[1.08] tracking-tight text-[#2b1b4d] sm:text-6xl lg:text-6xl">
+              {t("land.title")}
+            </h1>
+            <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-[#2b1b4d]/75 sm:text-lg">
+              {t("land.subtitle")}
+            </p>
 
-          <div className="mt-9 flex flex-wrap gap-2.5">
-            <Link href="/tickets" className="btn btn-primary px-5 py-3">
-              {t("land.ctaTickets")}
-            </Link>
-            <Link href="/report" className="btn btn-ghost px-5 py-3">
-              {t("land.ctaReport")}
-            </Link>
+            <div className="mt-9 flex flex-wrap gap-2.5">
+              <Link href="/tickets" className="btn btn-primary px-5 py-3">
+                {t("land.ctaTickets")}
+              </Link>
+              <Link href="/report" className="btn px-5 py-3 border border-[#2b1b4d]/35 text-[#2b1b4d] hover:bg-white/40">
+                {t("land.ctaReport")}
+              </Link>
+            </div>
+
+            {status === "ready" && (
+              <dl className="mt-12 grid max-w-xl grid-cols-3 divide-x divide-[#2b1b4d]/15 border-t border-[#2b1b4d]/15 pt-7 rtl:divide-x-reverse">
+                <Stat value={matches.length} label={t("land.upcoming")} light />
+                <Stat value={venues.length} label={t("land.venues")} light />
+                <Stat value={cities} label={t("land.cities")} light />
+              </dl>
+            )}
           </div>
 
-          {status === "ready" && (
-            <dl className="mt-12 grid max-w-xl grid-cols-3 divide-x divide-line border-t border-line pt-7 rtl:divide-x-reverse">
-              <Stat value={matches.length} label={t("land.upcoming")} />
-              <Stat value={venues.length} label={t("land.venues")} />
-              <Stat value={cities} label={t("land.cities")} />
-            </dl>
-          )}
-          </div>
-
-          {/*
-           * رسمة من unDraw، مُحوَّلة إلى ألوان هلا بـ scripts/recolour-art.
-           * رخصتها تتيح الاستعمال التجاري بلا إسناد مطلوب.
-           */}
-          <div className="hidden justify-self-center lg:block">
-            <Image
-              src="/art/goal.svg"
-              alt=""
-              width={520}
-              height={262}
-              priority
-              unoptimized
-              className="w-full max-w-md"
-            />
-          </div>
+          {/* المدن المستضيفة على خريطة المملكة، لكل مدينة رمزها */}
+          {status === "ready" && <HeroMap venues={venues} matches={matches} />}
         </div>
+
+        {/* أعلام المنتخبات: المونديال للعالم كله، والمملكة تستضيفه */}
+        {flags.length > 0 && (
+          <div className="relative py-4">
+            <div className="marquee-hold marquee-mask overflow-hidden">
+              <div className="marquee-track gap-6">
+                {[0, 1].map((pass) => (
+                  <div key={pass} className="flex gap-6 pe-6" aria-hidden="true">
+                    {flags.map((f) => (
+                      <span
+                        key={`${pass}-${f}`}
+                        className="rounded-full border border-[#2b1b4d]/20 bg-white/45 px-4 py-1.5 text-lg font-semibold leading-none tracking-wide text-[#2b1b4d]"
+                      >
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* --------------------------- شريط المباريات --------------------------- */}
       {upcoming.length > 0 && (
-        <section className="border-b border-line bg-surface py-5">
+        <section className="border-b border-[#2b1b4d]/10 py-5">
           {/* عنوان صغير يجعل الشريط معلومةً لا زخرفةً متحرّكة */}
           <p className="mx-auto mb-3 max-w-5xl px-5 text-[10px] uppercase tracking-[0.16em] text-text-dim">
             {t("land.upcoming")}
@@ -267,11 +297,11 @@ export default function LandingPage() {
 
 /* ------------------------------- قطع الصفحة ------------------------------- */
 
-function Stat({ value, label }: { value: number; label: string }) {
+function Stat({ value, label, light = false }: { value: number; label: string; light?: boolean }) {
   return (
     <div className="px-4 first:ps-0 last:pe-0">
-      <dt className="nums text-3xl font-bold tracking-tight text-text sm:text-4xl">{value}</dt>
-      <dd className="mt-1 text-[11px] uppercase tracking-[0.12em] text-text-dim">{label}</dd>
+      <dt className={`nums text-3xl font-bold tracking-tight sm:text-4xl ${light ? "text-[#2b1b4d]" : "text-text"}`}>{value}</dt>
+      <dd className={`mt-1 text-[11px] uppercase tracking-[0.12em] ${light ? "text-[#2b1b4d]/60" : "text-text-dim"}`}>{label}</dd>
     </div>
   );
 }
