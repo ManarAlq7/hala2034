@@ -50,3 +50,7 @@ next-env.d.ts
 logs/
 
 !.env.capacitor.example
+
+.vercel
+
+.fantoken.tmp

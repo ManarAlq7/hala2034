@@ -1,0 +1,5 @@
+# لا داعي لرفع مشروع أندرويد إلى خادم الويب
+android/
+capacitor-shell/
+assets/
+capacitor.config.ts
