@@ -165,7 +165,7 @@ export default function LandingPage() {
             <SectionHead
               title={t("land.upcoming")}
               note={t("land.demoData")}
-              action={{ href: "/tickets", label: t("land.viewAll") }}
+              action={{ href: "/matches", label: t("land.viewAll") }}
             />
             <ul className="grid gap-3 sm:grid-cols-2">
               {upcoming.slice(0, 4).map((m) => {
